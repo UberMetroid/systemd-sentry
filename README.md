@@ -7,9 +7,9 @@
 [![Language: Rust](https://img.shields.io/badge/Language-Pure%20Rust-orange.svg)](https://www.rust-lang.org/)
 [![Platform: Linux / systemd](https://img.shields.io/badge/Platform-Linux%20%2F%20systemd-red.svg)](https://systemd.io/)
 [![Zero C Dependencies](https://img.shields.io/badge/Dependencies-Zero%20C%20Libs-green.svg)](#architecture)
-[![Website: Online](https://img.shields.io/badge/Website-ubermetroid.github.io%2Fsystemd--sentry-blue.svg)](https://ubermetroid.github.io/systemd-sentry/)
+[![Website: Online](https://img.shields.io/badge/Website-syntropd.github.io%2Fsentry-blue.svg)](https://syntropd.github.io/sentry/)
 
-> 🌐 **Official Website & Architecture Guide:** [https://ubermetroid.github.io/systemd-sentry/](https://ubermetroid.github.io/systemd-sentry/)
+> 🌐 **Official Website & Architecture Guide:** [https://syntropd.github.io/sentry/](https://syntropd.github.io/sentry/)
 
 ---
 
@@ -52,8 +52,8 @@ Guarded D-Bus Action (Restart, Backoff, or Lockout) ──> Desktop Toast / Aler
 ### 1. Installation
 Clone and run the zero-trust installer:
 ```bash
-git clone https://github.com/UberMetroid/systemd-sentry.git
-cd systemd-sentry
+git clone https://github.com/syntropd/sentry.git
+cd sentry
 sudo ./install/install.sh
 ```
 
@@ -193,4 +193,4 @@ When a service fails or a circuit breaker trips, Sentry queries `systemd-logind`
 
 ## License
 
-[Apache 2.0](LICENSE) © UberMetroid & Contributors
+[Apache 2.0](LICENSE) © syntropd & Contributors

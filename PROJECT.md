@@ -97,7 +97,7 @@
 
 ## Code Layout
 ```
-/home/jeryd/Projects/UberMetroid/systemd-sentry/
+/home/jeryd/Projects/syntropd/sentry/
 ├── Cargo.toml
 ├── crates/
 │   ├── sentry-core/src/models/{coredump.rs, psi.rs, cgroup.rs}

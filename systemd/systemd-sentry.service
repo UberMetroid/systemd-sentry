@@ -1,6 +1,6 @@
 [Unit]
 Description=systemd-sentry Autonomous Supervisor
-Documentation=https://github.com/UberMetroid/systemd-sentry
+Documentation=https://github.com/syntropd/sentry
 After=dbus.service systemd-journald.service
 Wants=dbus.service systemd-journald.service
 

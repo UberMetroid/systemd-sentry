@@ -1,6 +1,6 @@
 [Unit]
 Description=systemd-sentry IPC Socket
-Documentation=https://github.com/UberMetroid/systemd-sentry
+Documentation=https://github.com/syntropd/sentry
 
 [Socket]
 ListenStream=/run/systemd-sentry/sentry.sock

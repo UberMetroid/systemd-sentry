@@ -4,7 +4,7 @@
 
 Build **systemd-sentry**, an autonomous, zero-trust system supervisor written in 100% pure Rust that brings intelligent root-cause triage, deterministic circuit-breaking, and guarded self-healing to `systemd`-managed Linux environments.
 
-Working directory: `/home/jeryd/Projects/UberMetroid/systemd-sentry`
+Working directory: `/home/jeryd/Projects/syntropd/sentry`
 Integrity mode: development
 
 ## Requirements
@@ -129,7 +129,7 @@ Teamwork Supervisor: Update from parent agent.
 
 Harden and resolve edge cases across `systemd-sentry` in pure Rust, ensuring resilient operation in constrained environments (containers, compressed crash dumps, multi-socket systemd setups, and transient LLM latency).
 
-Working directory: /home/jeryd/Projects/UberMetroid/systemd-sentry
+Working directory: /home/jeryd/Projects/syntropd/sentry
 Integrity mode: development
 
 ## Requirements
