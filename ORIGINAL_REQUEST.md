@@ -77,3 +77,10 @@ Integrity mode: development
 ## Follow-up — 2026-09-24T00:34:33Z
 
 USER DIRECTIVE: Please do NOT use the name 'syntry' anywhere in the project. Do not use 'syntry' for binaries, symlinks, CLI commands, comments, documentation, logs, or test strings. The project and CLI name is strictly 'sentry' (or 'systemd-sentry'). Please ensure all current and future milestones adhere to this naming.
+
+## Follow-up — 2026-09-24T00:58:44Z
+
+USER DESIGN DIRECTIVE:
+1. Unix Philosophy: Clean separation of mechanism and policy; composable standard streams (stdout/stderr/stdin); silence on success; standard exit codes; treat everything as a file/stream.
+2. Linus Torvalds Pragmatism: Zero unnecessary abstraction layers or bloat; fast, clean, deterministic code; respect Linux kernel interfaces (/proc, /sys, cgroups v2, PSI); NEVER panic in runtime daemon paths; fail safely.
+3. systemd Design Alignment: Support .d/ drop-in configuration directories (/etc/systemd-sentry/policy.d/*.toml); standard systemd exit codes; native D-Bus conventions; strict sandboxing. Ensure all upcoming milestones adhere to this.

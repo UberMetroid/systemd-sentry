@@ -157,6 +157,7 @@ When a service fails or a circuit breaker trips, Sentry queries `systemd-logind`
 * **Source Constraints**: Strictly $\le 256$ lines per file; single function per file.
 * **Testing**: 1:1 unit QA tests for every function, edge test suite, and `cargo-fuzz` targets.
 * **System Integration**: `Type=notify`, `WatchdogSec`, socket activation, `sysusers.d`, `tmpfiles.d`, `dbus-1` policies, cgroups v2, kernel PSI, and `systemd-coredump`.
+* **Design Principles**: Built on [Unix Philosophy, Torvalds Pragmatism, and systemd Integration](docs/design_principles.md).
 
 ---
 
