@@ -7,7 +7,8 @@ use std::io::BufRead;
 /// are encountered, synchronizing on the next entry boundary.
 pub fn resync_journal_stream<R: BufRead>(reader: &mut R) -> Result<usize, JournalError> {
     let mut skipped_bytes = 0usize;
-    let mut last_byte_was_newline = false;
+    // The caller just completed a read_line, so the previous byte read was a newline.
+    let mut last_byte_was_newline = true;
 
     loop {
         let available = reader.fill_buf().map_err(JournalError::Io)?;

@@ -37,21 +37,24 @@ pub fn read_cgroup_io(cgroup_dir: &Path) -> Result<Vec<IoDeviceMetrics>, Telemet
             dios: 0,
         };
 
+        let mut parsed_any_keys = false;
         for token in tokens {
             if let Some((k, v)) = token.split_once('=') {
                 let val = v.parse::<u64>().unwrap_or(0);
                 match k {
-                    "rbytes" => dev.rbytes = val,
-                    "wbytes" => dev.wbytes = val,
-                    "rios" => dev.rios = val,
-                    "wios" => dev.wios = val,
-                    "dbytes" => dev.dbytes = val,
-                    "dios" => dev.dios = val,
+                    "rbytes" => { dev.rbytes = val; parsed_any_keys = true; },
+                    "wbytes" => { dev.wbytes = val; parsed_any_keys = true; },
+                    "rios" => { dev.rios = val; parsed_any_keys = true; },
+                    "wios" => { dev.wios = val; parsed_any_keys = true; },
+                    "dbytes" => { dev.dbytes = val; parsed_any_keys = true; },
+                    "dios" => { dev.dios = val; parsed_any_keys = true; },
                     _ => {}
                 }
             }
         }
-        device_stats.push(dev);
+        if parsed_any_keys {
+            device_stats.push(dev);
+        }
     }
 
     Ok(device_stats)
