@@ -45,7 +45,7 @@ fn test_rapid_trips_within_microseconds_locks_out() {
     let config = CircuitConfig {
         max_failures: 1, // Trip on every failure
         window_duration: Duration::from_secs(60),
-        cooldown_duration: Duration::from_secs(30),
+        cooldown_duration: Duration::ZERO,
         max_cooldown: Duration::from_secs(1800),
         flap_window: Duration::from_secs(900),
         flap_threshold: 3,

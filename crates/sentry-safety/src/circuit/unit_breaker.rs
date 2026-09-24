@@ -52,6 +52,10 @@ impl UnitBreaker {
             return &self.state;
         }
 
+        if matches!(self.state, CircuitState::Open { .. }) {
+            return &self.state;
+        }
+
         if matches!(self.state, CircuitState::HalfOpen) {
             // A failure during trial immediately re-trips or locks out
             return self.trigger_trip(now, config, 1);
