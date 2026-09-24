@@ -1140,7 +1140,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "syntropd-sentry"
+name = "syntrop-sentry"
 version = "0.1.0"
 dependencies = [
  "chrono",
@@ -1235,7 +1235,7 @@ dependencies = [
  "rustix 0.38.44",
  "serde",
  "serde_json",
- "syntropd-sentry",
+ "syntrop-sentry",
  "syntropd-sentry-core",
  "syntropd-sentry-diagnostic",
  "syntropd-sentry-driver",

@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+publish = false
 description = "Deterministic zero-trust safety engine, sliding-window circuit breaker, and drop-in policy gatekeeper for systemd-sentry"
 
 [lib]

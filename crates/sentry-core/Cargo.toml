@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+publish = false
 description = "Core domain types, telemetry models, and error definitions for systemd-sentry"
 
 [lib]

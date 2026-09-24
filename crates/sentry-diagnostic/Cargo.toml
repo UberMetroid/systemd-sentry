@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+publish = false
 description = "Diagnostic engine, LLM providers, and fallback triage for systemd-sentry"
 
 [lib]

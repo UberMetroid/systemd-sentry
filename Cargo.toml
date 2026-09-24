@@ -24,7 +24,7 @@ sentry-driver = { package = "syntropd-sentry-driver", version = "0.1.0", path = 
 sentry-diagnostic = { package = "syntropd-sentry-diagnostic", version = "0.1.0", path = "crates/sentry-diagnostic" }
 sentry-mcp = { package = "syntropd-sentry-mcp", version = "0.1.0", path = "crates/sentry-mcp" }
 sentry-safety = { package = "syntropd-sentry-safety", version = "0.1.0", path = "crates/sentry-safety" }
-sentry-daemon = { package = "syntropd-sentry", version = "0.1.0", path = "crates/sentry-daemon" }
+sentry-daemon = { package = "syntrop-sentry", version = "0.1.0", path = "crates/sentry-daemon" }
 
 # HTTP client & async traits (pure Rust TLS, zero libssl/libcrypto)
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
