@@ -93,12 +93,3 @@ API / IPC CONTRACT FORMALIZED:
 3. AI Agent Protocol: Model Context Protocol (MCP) via stdio (systemd-sentry mcp) for agentic and tool integrations.
 4. Zero Network Listeners: No TCP ports opened.
 All assets created in systemd/ and documented in docs/ipc_api.md. Please ensure Milestone 3 (MCP/Inference) and Milestone 4 (CLI) adhere to this.
-
-## Follow-up — 2026-09-24T01:05:58Z
-
-API / IPC CONTRACT FORMALIZED:
-1. Local UNIX Socket IPC: /run/systemd-sentry/sentry.sock with SO_PEERCRED kernel credential authorization (for local CLI queries).
-2. System D-Bus: org.freedesktop.SystemdSentry on system bus for systemd-idiomatic control.
-3. AI Agent Protocol: Model Context Protocol (MCP) via stdio (systemd-sentry mcp) for agentic and tool integrations.
-4. Zero Network Listeners: No TCP ports opened.
-All assets created in systemd/ and documented in docs/ipc_api.md. Please ensure Milestone 3 (MCP/Inference) and Milestone 4 (CLI) adhere to this.
