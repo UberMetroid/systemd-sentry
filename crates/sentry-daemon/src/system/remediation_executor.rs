@@ -43,21 +43,8 @@ impl RemediationExecutor {
         match remediation.action {
             RemediationAction::Restart | RemediationAction::RestartWithBackoff => {
                 info!("Executing systemd RestartUnit on {}", unit);
-                let reply: zbus::Result<zbus::zvariant::OwnedObjectPath> = connection
-                    .call_method(
-                        Some("org.freedesktop.systemd1"),
-                        "/org/freedesktop/systemd1",
-                        Some("org.freedesktop.systemd1.Manager"),
-                        "RestartUnit",
-                        &(unit, "replace"),
-                    )
-                    .await
-                    .map_err(|e| format!("D-Bus call RestartUnit failed: {}", e))?
-                    .body()
-                    .deserialize();
-
-                match reply {
-                    Ok(path) => Ok(format!("Dispatched RestartUnit: {}", path.as_str())),
+                match sentry_driver::dbus::call_systemd_unit_method(&connection, "RestartUnit", unit, "replace").await {
+                    Ok(path) => Ok(format!("Dispatched RestartUnit: {}", path)),
                     Err(e) => {
                         error!("RestartUnit failed for {}: {}", unit, e);
                         Err(format!("D-Bus call RestartUnit failed: {}", e))
@@ -66,20 +53,7 @@ impl RemediationExecutor {
             }
             RemediationAction::ResetFailed => {
                 info!("Executing systemd ResetFailedUnit on {}", unit);
-                let reply: zbus::Result<()> = connection
-                    .call_method(
-                        Some("org.freedesktop.systemd1"),
-                        "/org/freedesktop/systemd1",
-                        Some("org.freedesktop.systemd1.Manager"),
-                        "ResetFailedUnit",
-                        &(unit,),
-                    )
-                    .await
-                    .map_err(|e| format!("D-Bus call ResetFailedUnit failed: {}", e))?
-                    .body()
-                    .deserialize();
-
-                match reply {
+                match sentry_driver::dbus::call_systemd_unit_method(&connection, "ResetFailedUnit", unit, "").await {
                     Ok(_) => Ok(format!("ResetFailedUnit succeeded for {}", unit)),
                     Err(e) => {
                         error!("ResetFailedUnit failed for {}: {}", unit, e);
@@ -89,21 +63,8 @@ impl RemediationExecutor {
             }
             RemediationAction::Reload => {
                 info!("Executing systemd ReloadUnit on {}", unit);
-                let reply: zbus::Result<zbus::zvariant::OwnedObjectPath> = connection
-                    .call_method(
-                        Some("org.freedesktop.systemd1"),
-                        "/org/freedesktop/systemd1",
-                        Some("org.freedesktop.systemd1.Manager"),
-                        "ReloadUnit",
-                        &(unit, "replace"),
-                    )
-                    .await
-                    .map_err(|e| format!("D-Bus call ReloadUnit failed: {}", e))?
-                    .body()
-                    .deserialize();
-
-                match reply {
-                    Ok(path) => Ok(format!("Dispatched ReloadUnit: {}", path.as_str())),
+                match sentry_driver::dbus::call_systemd_unit_method(&connection, "ReloadUnit", unit, "replace").await {
+                    Ok(path) => Ok(format!("Dispatched ReloadUnit: {}", path)),
                     Err(e) => {
                         error!("ReloadUnit failed for {}: {}", unit, e);
                         Err(format!("D-Bus call ReloadUnit failed: {}", e))

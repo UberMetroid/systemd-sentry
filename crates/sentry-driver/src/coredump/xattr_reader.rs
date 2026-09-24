@@ -12,12 +12,11 @@ pub fn read_coredump_xattrs(path: &Path) -> Result<CoredumpXattrs, CoredumpError
     }
 
     let read_attr = |name: &str| -> Option<String> {
-        let mut buf = vec![0u8; 1024];
+        let mut buf = [0u8; 1024];
         match getxattr(path, name, &mut buf) {
-            Ok(size) => {
-                buf.truncate(size);
-                String::from_utf8(buf).ok()
-            }
+            Ok(size) => std::str::from_utf8(&buf[..size])
+                .ok()
+                .map(|s| s.trim_end_matches('\0').to_string()),
             Err(_) => None,
         }
     };

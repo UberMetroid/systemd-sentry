@@ -85,12 +85,12 @@ pub async fn run_event_loop(
                 match s.load_shedder.evaluate(rss_bytes, None) {
                     SheddingTransition::Entered => {
                         warn!("RSS reached limit ({} MB); entering degraded load-shedding mode", rss_bytes / (1024 * 1024));
-                        let _ = notify_status("STATUS=Degraded: Load shedding active (RSS > 13MB)");
+                        let _ = notify_status("Degraded: Load shedding active (RSS > 13MB)");
                         s.circuit_registry.evict_idle_breakers(std::time::Instant::now());
                     }
                     SheddingTransition::Exited => {
                         info!("RSS dropped below threshold ({} MB); exiting degraded mode", rss_bytes / (1024 * 1024));
-                        let _ = notify_status("STATUS=Healthy: Load shedding deactivated (RSS < 11MB)");
+                        let _ = notify_status("Healthy: Load shedding deactivated (RSS < 11MB)");
                     }
                     SheddingTransition::Unchanged => {}
                 }

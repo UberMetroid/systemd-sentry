@@ -43,7 +43,10 @@ pub fn notify_ready() -> Result<bool, NotifyError> {
 
 /// Convenience helper: notifies systemd of current status string (`STATUS=...`).
 pub fn notify_status(status: impl Into<String>) -> Result<bool, NotifyError> {
-    let s = status.into();
+    let mut s = status.into();
+    if let Some(stripped) = s.strip_prefix("STATUS=") {
+        s = stripped.to_string();
+    }
     if s.len() > 1024 {
         return Err(NotifyError::StatusTooLong(s.len()));
     }

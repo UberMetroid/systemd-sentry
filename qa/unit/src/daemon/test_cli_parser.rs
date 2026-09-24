@@ -91,3 +91,18 @@ fn test_help_and_version() {
     assert_eq!(res.1, EX_OK);
     assert!(res.0.contains("systemd-sentry"));
 }
+
+#[test]
+fn test_subcommand_help_flags() {
+    for sub in &["status", "check", "triage", "monitor", "incidents", "inspect", "reset", "mcp", "completions", "setup"] {
+        let args_long = vec![sub.to_string(), "--help".to_string()];
+        let res_long = parse_cli_args(&args_long).unwrap_err();
+        assert_eq!(res_long.1, EX_OK, "Subcommand {} --help should return EX_OK", sub);
+        assert!(res_long.0.contains(sub), "Subcommand {} --help should contain subcommand name", sub);
+
+        let args_short = vec![sub.to_string(), "-h".to_string()];
+        let res_short = parse_cli_args(&args_short).unwrap_err();
+        assert_eq!(res_short.1, EX_OK, "Subcommand {} -h should return EX_OK", sub);
+        assert!(res_short.0.contains(sub), "Subcommand {} -h should contain subcommand name", sub);
+    }
+}

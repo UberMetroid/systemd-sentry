@@ -4,7 +4,6 @@ use sentry_driver::activation::parse_listen_fds;
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::os::unix::fs::PermissionsExt;
-use std::os::unix::io::FromRawFd;
 use std::os::unix::net::UnixStream as StdUnixStream;
 use std::path::Path;
 use tokio::net::UnixListener;
@@ -14,11 +13,7 @@ pub fn bind_or_activate_socket(socket_path: &str) -> Result<UnixListener, Error>
     // 1. Check for systemd socket activation ($LISTEN_FDS)
     if let Ok(fds) = parse_listen_fds(true) {
         if let Some(sock) = fds.into_iter().find(|s| s.fd == 3) {
-            // SAFETY: FD 3 was verified by parse_listen_fds as an active socket
-            // passed directly from systemd init (PID 1).
-            let std_listener = unsafe { std::os::unix::net::UnixListener::from_raw_fd(sock.fd) };
-            std_listener.set_nonblocking(true)?;
-            return UnixListener::from_std(std_listener);
+            return sock.into_tokio_unix_listener();
         }
     }
 

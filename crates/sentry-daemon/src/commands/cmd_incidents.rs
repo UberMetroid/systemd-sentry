@@ -28,7 +28,13 @@ pub async fn execute_incidents(socket_path: &str, limit: usize, json: bool) -> i
                         let id = item.get("incident_id").and_then(|v| v.as_str()).unwrap_or("-");
                         let unit = item.get("unit_name").and_then(|v| v.as_str()).unwrap_or("-");
                         let sev = item.get("severity").and_then(|v| v.as_str()).unwrap_or("-");
-                        let cause = item.get("root_cause").and_then(|v| v.as_str()).unwrap_or("-");
+                        let cause = item
+                            .get("root_cause")
+                            .and_then(|v| {
+                                v.as_str()
+                                    .or_else(|| v.get("summary").and_then(|s| s.as_str()))
+                            })
+                            .unwrap_or("-");
                         println!("{:<36} {:<24} {:<10} {:<30}", id, unit, sev, cause);
                     }
                 }

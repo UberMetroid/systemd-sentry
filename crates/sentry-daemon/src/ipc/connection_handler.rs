@@ -26,32 +26,71 @@ pub async fn handle_ipc_connection(
 
     let (read_half, mut write_half) = stream.split();
     let mut reader = BufReader::new(read_half);
-    let mut line = String::new();
+    let mut buf = Vec::new();
 
     loop {
-        line.clear();
-        let bytes_read = match reader.read_line(&mut line).await {
-            Ok(0) => break, // Client disconnected
-            Ok(n) if n > MAX_IPC_FRAME_SIZE => {
-                warn!("Client frame exceeded {} byte limit; disconnecting", MAX_IPC_FRAME_SIZE);
-                let _ = write_response(&mut write_half, &IpcResponse::Error {
-                    code: -32001,
-                    message: "Frame size exceeded 32 KiB limit".to_string(),
-                }).await;
+        buf.clear();
+        let mut bytes_read = 0;
+        let mut exceeded = false;
+
+        loop {
+            let available = match reader.fill_buf().await {
+                Ok(b) => b,
+                Err(e) => {
+                    debug!("Error reading from IPC client: {}", e);
+                    break;
+                }
+            };
+            if available.is_empty() {
                 break;
             }
-            Ok(n) => n,
-            Err(e) => {
-                debug!("Error reading from IPC client: {}", e);
+            if let Some(pos) = available.iter().position(|&b| b == b'\n') {
+                let to_take = pos + 1;
+                if !exceeded && bytes_read + to_take <= MAX_IPC_FRAME_SIZE {
+                    buf.extend_from_slice(&available[..to_take]);
+                } else {
+                    exceeded = true;
+                }
+                bytes_read += to_take;
+                reader.consume(to_take);
                 break;
+            } else {
+                let len = available.len();
+                if !exceeded && bytes_read + len <= MAX_IPC_FRAME_SIZE {
+                    buf.extend_from_slice(available);
+                } else {
+                    exceeded = true;
+                }
+                bytes_read += len;
+                reader.consume(len);
             }
-        };
+        }
 
         if bytes_read == 0 {
             break;
         }
 
-        let request: IpcRequest = match serde_json::from_str(&line) {
+        if exceeded || bytes_read > MAX_IPC_FRAME_SIZE {
+            warn!("Client frame exceeded {} byte limit; disconnecting", MAX_IPC_FRAME_SIZE);
+            let _ = write_response(&mut write_half, &IpcResponse::Error {
+                code: -32001,
+                message: "Frame size exceeded 32 KiB limit".to_string(),
+            }).await;
+            break;
+        }
+
+        let line = match std::str::from_utf8(&buf) {
+            Ok(s) => s,
+            Err(_) => {
+                let _ = write_response(&mut write_half, &IpcResponse::Error {
+                    code: -32700,
+                    message: "Parse error: invalid UTF-8".to_string(),
+                }).await;
+                continue;
+            }
+        };
+
+        let request: IpcRequest = match serde_json::from_str(line) {
             Ok(req) => req,
             Err(e) => {
                 let _ = write_response(&mut write_half, &IpcResponse::Error {

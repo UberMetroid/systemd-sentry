@@ -54,7 +54,8 @@ impl IncidentManager {
         // Connect systemd-coredump: scan for core dumps matching crashed unit
         let coredump_dir = std::path::Path::new("/var/lib/systemd/coredump");
         if details.result.as_deref() == Some("core-dump") || details.result.as_deref() == Some("signal") {
-            incident.coredump = sentry_driver::coredump::find_latest_coredump(coredump_dir, Some(&unit_name));
+            let comm_prefix = unit_name.strip_suffix(".service").unwrap_or(&unit_name);
+            incident.coredump = sentry_driver::coredump::find_latest_coredump(coredump_dir, Some(comm_prefix));
         }
 
         // 4. Perform triage: deterministic fallback if degraded, otherwise diagnostic engine

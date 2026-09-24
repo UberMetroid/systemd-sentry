@@ -44,6 +44,10 @@ pub fn parse_cli_args(args: &[String]) -> Result<CliArgs, (String, i32)> {
     let subcmd = args[idx].as_str();
     idx += 1;
 
+    if args[idx..].iter().any(|a| a == "-h" || a == "--help") {
+        return Err((format_subcommand_help(subcmd), EX_OK));
+    }
+
     let command = match subcmd {
         "daemon" => Command::Daemon,
         "status" => {

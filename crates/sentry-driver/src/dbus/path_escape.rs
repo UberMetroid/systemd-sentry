@@ -8,13 +8,15 @@ use zbus::zvariant::OwnedObjectPath;
 /// ASCII alphanumeric characters remain unchanged; all other characters are converted
 /// to `_` followed by two lowercase hexadecimal digits.
 pub fn escape_unit_name(unit: &str) -> String {
+    const HEX_DIGITS: &[u8; 16] = b"0123456789abcdef";
     let mut out = String::with_capacity(unit.len() * 3);
     for b in unit.bytes() {
         if b.is_ascii_alphanumeric() {
             out.push(b as char);
         } else {
             out.push('_');
-            out.push_str(&format!("{b:02x}"));
+            out.push(HEX_DIGITS[(b >> 4) as usize] as char);
+            out.push(HEX_DIGITS[(b & 0x0f) as usize] as char);
         }
     }
     out

@@ -28,7 +28,11 @@ pub fn find_latest_coredump(coredump_dir: &Path, comm_match: Option<&str>) -> Op
 
         if let Ok(xattrs) = read_coredump_xattrs(&path) {
             let matched = match (comm_match, xattrs.comm.as_deref()) {
-                (Some(expected), Some(actual)) => actual == expected || expected.starts_with(actual),
+                (Some(expected), Some(actual)) => {
+                    let exp = expected.strip_suffix(".service").unwrap_or(expected);
+                    !actual.is_empty()
+                        && (actual == exp || exp.starts_with(actual) || actual.starts_with(exp))
+                }
                 (None, _) => true,
                 _ => false,
             };

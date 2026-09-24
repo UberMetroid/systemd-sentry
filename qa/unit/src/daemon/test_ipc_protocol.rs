@@ -56,3 +56,81 @@ fn test_peer_credentials_authorization() {
     let daemon_creds = PeerCredentials { uid: daemon_uid, gid: daemon_uid, pid: Some(9999) };
     assert!(authorize_action(&daemon_creds, daemon_uid, true).is_ok());
 }
+
+#[test]
+fn test_status_circuit_breakers_payload_compatibility() {
+    use sentry_safety::circuit::CircuitStateSnapshot;
+    use std::collections::HashMap;
+
+    let mut map = HashMap::new();
+    map.insert(
+        "api-worker.service".to_string(),
+        CircuitStateSnapshot {
+            state: "OPEN".to_string(),
+            cooldown_remaining_secs: 42,
+            recent_failures: 3,
+            permanently_locked: false,
+        },
+    );
+
+    let status_val = serde_json::json!({
+        "uptime_seconds": 3600,
+        "rss_mb": 12.3,
+        "degraded_mode": false,
+        "dropped_events": 0,
+        "tracked_units_count": 1,
+        "circuit_breakers": map,
+    });
+
+    let breakers_obj = status_val.get("circuit_breakers").and_then(|v| v.as_object()).unwrap();
+    let b = breakers_obj.get("api-worker.service").unwrap();
+    assert_eq!(b.get("state").and_then(|v| v.as_str()), Some("OPEN"));
+    assert_eq!(b.get("recent_failures").and_then(|v| v.as_u64()), Some(3));
+    assert_eq!(b.get("permanently_locked").and_then(|v| v.as_bool()), Some(false));
+}
+
+#[test]
+fn test_inspect_and_incidents_diagnostic_payload_extraction() {
+    use sentry_core::models::{DiagnosticPayload, Evidence, ProposedRemediation, RemediationAction, RiskLevel, RootCause, Severity};
+
+    let payload = DiagnosticPayload {
+        incident_id: uuid::Uuid::nil(),
+        timestamp: chrono::Utc::now(),
+        unit_name: "db.service".to_string(),
+        root_cause: RootCause {
+            summary: "Out of memory error".to_string(),
+            detail: "Killed by OOM killer due to memory exhaustion".to_string(),
+        },
+        evidence: Evidence {
+            journal_lines: vec!["oom-killer invoked".to_string()],
+            exit_code: Some(137),
+            signal: Some("SIGKILL".to_string()),
+            coredump: None,
+            psi: None,
+            cgroup: None,
+        },
+        severity: Severity::Critical,
+        proposed_remediation: ProposedRemediation {
+            action: RemediationAction::RestartWithBackoff,
+            rationale: "Backoff restart to avoid thrashing".to_string(),
+            risk_level: RiskLevel::Medium,
+            confidence: 0.95,
+        },
+    };
+
+    let val = serde_json::to_value(&payload).unwrap();
+
+    // Verify incidents table root_cause extraction
+    let cause = val.get("root_cause")
+        .and_then(|v| v.as_str().or_else(|| v.get("summary").and_then(|s| s.as_str())))
+        .unwrap();
+    assert_eq!(cause, "Out of memory error");
+
+    // Verify inspect field extraction
+    let unit = val.get("unit_name").and_then(|v| v.as_str()).unwrap();
+    assert_eq!(unit, "db.service");
+    let detail = val.get("root_cause").unwrap().get("detail").and_then(|v| v.as_str()).unwrap();
+    assert_eq!(detail, "Killed by OOM killer due to memory exhaustion");
+    let exit_code = val.get("evidence").unwrap().get("exit_code").and_then(|v| v.as_i64()).unwrap();
+    assert_eq!(exit_code, 137);
+}

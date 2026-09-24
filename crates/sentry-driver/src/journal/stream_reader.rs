@@ -31,6 +31,16 @@ impl JournalStreamReader {
                         debug!("Reached EOF on journal stream");
                         break;
                     }
+                    Err(sentry_core::error::JournalError::UnexpectedEof) => {
+                        debug!("Reached EOF on journal stream");
+                        break;
+                    }
+                    Err(sentry_core::error::JournalError::Io(ref e))
+                        if e.kind() != std::io::ErrorKind::InvalidData =>
+                    {
+                        error!("Fatal I/O error on journal stream: {e}; terminating stream");
+                        break;
+                    }
                     Err(e) => {
                         error!("Journal export stream error (resynced): {e}");
                     }

@@ -49,17 +49,55 @@ fn print_status_table(data: &serde_json::Value) {
     println!("   Dropped Events: {}", dropped);
     println!("   Tracked Units:  {}", tracked);
 
-    if let Some(breakers) = data.get("circuit_breakers").and_then(|v| v.as_array()) {
+    if let Some(breakers_obj) = data.get("circuit_breakers").and_then(|v| v.as_object()) {
+        if !breakers_obj.is_empty() {
+            println!("\nCIRCUIT BREAKERS:");
+            println!("{:<32} {:<12} {:<10} {:<8}", "UNIT", "STATE", "FAILURES", "LOCKED");
+            println!("{:-<66}", "");
+            let mut entries: Vec<_> = breakers_obj.iter().collect();
+            entries.sort_by_key(|(k, _)| *k);
+            for (unit, b) in entries {
+                let state = b.get("state").and_then(|v| v.as_str()).unwrap_or("-");
+                let fails = b
+                    .get("recent_failures")
+                    .or_else(|| b.get("failure_count"))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let locked = if b.get("permanently_locked").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    "YES"
+                } else if b.get("flap_count").and_then(|v| v.as_u64()).unwrap_or(0) > 0 {
+                    "YES"
+                } else {
+                    "NO"
+                };
+                println!("{:<32} {:<12} {:<10} {:<8}", unit, state, fails, locked);
+            }
+        }
+    } else if let Some(breakers) = data.get("circuit_breakers").and_then(|v| v.as_array()) {
         if !breakers.is_empty() {
             println!("\nCIRCUIT BREAKERS:");
-            println!("{:<32} {:<12} {:<10} {:<8}", "UNIT", "STATE", "FAILURES", "FLAPS");
+            println!("{:<32} {:<12} {:<10} {:<8}", "UNIT", "STATE", "FAILURES", "LOCKED");
             println!("{:-<66}", "");
             for b in breakers {
-                let unit = b.get("unit_name").and_then(|v| v.as_str()).unwrap_or("-");
+                let unit = b
+                    .get("unit_name")
+                    .or_else(|| b.get("unit"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("-");
                 let state = b.get("state").and_then(|v| v.as_str()).unwrap_or("-");
-                let fails = b.get("failure_count").and_then(|v| v.as_u64()).unwrap_or(0);
-                let flaps = b.get("flap_count").and_then(|v| v.as_u64()).unwrap_or(0);
-                println!("{:<32} {:<12} {:<10} {:<8}", unit, state, fails, flaps);
+                let fails = b
+                    .get("recent_failures")
+                    .or_else(|| b.get("failure_count"))
+                    .and_then(|v| v.as_u64())
+                    .unwrap_or(0);
+                let locked = if b.get("permanently_locked").and_then(|v| v.as_bool()).unwrap_or(false) {
+                    "YES"
+                } else if b.get("flap_count").and_then(|v| v.as_u64()).unwrap_or(0) > 0 {
+                    "YES"
+                } else {
+                    "NO"
+                };
+                println!("{:<32} {:<12} {:<10} {:<8}", unit, state, fails, locked);
             }
         }
     }

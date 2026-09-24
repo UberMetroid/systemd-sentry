@@ -7,7 +7,24 @@ use serde_json::{json, Value};
 
 /// Reads and formats an MCP resource by URI.
 pub fn read_resource(state: &McpState, uri: &str) -> Result<Value, JsonRpcError> {
-    if let Some(id) = uri.strip_prefix("incident://") {
+    let normalized = if let Some(stripped) = uri.strip_prefix("sentry://") {
+        if let Some(id) = stripped.strip_prefix("incidents/") {
+            format!("incident://{id}")
+        } else if let Some(unit) = stripped.strip_prefix("telemetry/") {
+            format!("telemetry://{unit}")
+        } else if stripped == "policy" {
+            "policy://current".to_string()
+        } else if stripped == "circuit" || stripped == "circuit/status" {
+            "circuit://status".to_string()
+        } else {
+            uri.to_string()
+        }
+    } else {
+        uri.to_string()
+    };
+    let uri_str = normalized.as_str();
+
+    if let Some(id) = uri_str.strip_prefix("incident://") {
         match state.get_incident(id) {
             Some(incident) => {
                 let text = serde_json::to_string_pretty(&incident)
@@ -25,7 +42,7 @@ pub fn read_resource(state: &McpState, uri: &str) -> Result<Value, JsonRpcError>
                 format!("Resource not found: '{uri}'"),
             )),
         }
-    } else if let Some(unit) = uri.strip_prefix("telemetry://") {
+    } else if let Some(unit) = uri_str.strip_prefix("telemetry://") {
         let telemetry = state.get_unit_telemetry(unit);
         let text = serde_json::to_string_pretty(&telemetry)
             .unwrap_or_else(|_| format!("{telemetry:?}"));
@@ -36,7 +53,7 @@ pub fn read_resource(state: &McpState, uri: &str) -> Result<Value, JsonRpcError>
                 "text": text
             }]
         }))
-    } else if uri == "policy://current" {
+    } else if uri_str == "policy://current" {
         let policy_text = state.get_policy();
         Ok(json!({
             "contents": [{
@@ -45,7 +62,7 @@ pub fn read_resource(state: &McpState, uri: &str) -> Result<Value, JsonRpcError>
                 "text": policy_text
             }]
         }))
-    } else if uri == "circuit://status" {
+    } else if uri_str == "circuit://status" {
         let circuit_table = state.get_circuit_status();
         let text = serde_json::to_string_pretty(&circuit_table)
             .unwrap_or_else(|_| format!("{circuit_table:?}"));
