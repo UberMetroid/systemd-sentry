@@ -46,6 +46,7 @@ impl UnitBreaker {
     /// Records a unit failure event, updating sliding windows and trip logic.
     pub fn record_failure(&mut self, now: Instant, config: &CircuitConfig) -> &CircuitState {
         self.last_activity = now;
+        self.evaluate_state(now);
 
         if matches!(self.state, CircuitState::PermanentlyLocked { .. }) {
             return &self.state;
@@ -57,12 +58,13 @@ impl UnitBreaker {
         }
 
         // Evict expired failure timestamps outside sliding window
-        let cutoff = now.checked_sub(config.window_duration).unwrap_or(now);
-        while let Some(&front) = self.failure_timestamps.front() {
-            if front < cutoff {
-                self.failure_timestamps.pop_front();
-            } else {
-                break;
+        if let Some(cutoff) = now.checked_sub(config.window_duration) {
+            while let Some(&front) = self.failure_timestamps.front() {
+                if front < cutoff {
+                    self.failure_timestamps.pop_front();
+                } else {
+                    break;
+                }
             }
         }
 
@@ -80,13 +82,16 @@ impl UnitBreaker {
     }
 
     fn trigger_trip(&mut self, now: Instant, config: &CircuitConfig, count: usize) -> &CircuitState {
+        self.failure_timestamps.clear();
+
         // Evict expired trip records outside flap window
-        let flap_cutoff = now.checked_sub(config.flap_window).unwrap_or(now);
-        while let Some(&front) = self.trip_timestamps.front() {
-            if front < flap_cutoff {
-                self.trip_timestamps.pop_front();
-            } else {
-                break;
+        if let Some(flap_cutoff) = now.checked_sub(config.flap_window) {
+            while let Some(&front) = self.trip_timestamps.front() {
+                if front < flap_cutoff {
+                    self.trip_timestamps.pop_front();
+                } else {
+                    break;
+                }
             }
         }
 

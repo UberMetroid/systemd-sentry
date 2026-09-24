@@ -40,6 +40,37 @@ fn test_rapid_failures_within_microseconds() {
 }
 
 #[test]
+fn test_rapid_trips_within_microseconds_locks_out() {
+    let base = Instant::now();
+    let config = CircuitConfig {
+        max_failures: 1, // Trip on every failure
+        window_duration: Duration::from_secs(60),
+        cooldown_duration: Duration::from_secs(30),
+        max_cooldown: Duration::from_secs(1800),
+        flap_window: Duration::from_secs(900),
+        flap_threshold: 3,
+    };
+
+    let mut breaker = UnitBreaker::new("rapid-tripper.service", base);
+
+    // Trip 1 at base
+    breaker.record_failure(base, &config);
+    // Trip 2 at base + 1 microsecond
+    let t2 = base + Duration::from_micros(1);
+    breaker.record_failure(t2, &config);
+    // Trip 3 at base + 2 microseconds
+    let t3 = base + Duration::from_micros(2);
+    let st = breaker.record_failure(t3, &config);
+
+    assert!(
+        matches!(st, CircuitState::PermanentlyLocked { flap_trips: 3, .. }),
+        "Rapid microsecond trips failed to lock out: {:?}",
+        st
+    );
+    assert!(!st.allows_remediation());
+}
+
+#[test]
 fn test_clock_skew_backwards_timestamps() {
     let now = Instant::now();
     let config = CircuitConfig::default();
@@ -122,6 +153,36 @@ fn test_duration_max_checked_sub_edge() {
     assert!(
         matches!(st, CircuitState::PermanentlyLocked { .. }),
         "Flap lockout failed when flap_window is Duration::MAX: unwrap_or(now) evicted past trips! Got: {:?}",
+        st
+    );
+}
+
+#[test]
+fn test_window_duration_max_checked_sub_edge() {
+    let now = Instant::now();
+    // When window_duration is Duration::MAX, checked_sub returns None.
+    // unwrap_or(now) sets cutoff = now, which evicts all prior failure timestamps!
+    let config = CircuitConfig {
+        max_failures: 3,
+        window_duration: Duration::MAX,
+        cooldown_duration: Duration::from_secs(30),
+        max_cooldown: Duration::from_secs(1800),
+        flap_window: Duration::from_secs(900),
+        flap_threshold: 3,
+    };
+
+    let mut breaker = UnitBreaker::new("max-window-duration.service", now);
+    let t1 = now;
+    let t2 = now + Duration::from_secs(1);
+    let t3 = now + Duration::from_secs(2);
+
+    breaker.record_failure(t1, &config);
+    breaker.record_failure(t2, &config);
+    let st = breaker.record_failure(t3, &config);
+
+    assert!(
+        matches!(st, CircuitState::Open { failure_count: 3, .. }),
+        "Circuit failed to trip OPEN when window_duration is Duration::MAX: unwrap_or(now) evicted past failures! Got: {:?}",
         st
     );
 }

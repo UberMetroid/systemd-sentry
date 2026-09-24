@@ -164,3 +164,23 @@ fn test_flapping_window_expiry_prevents_unwarranted_lockout() {
     );
     assert!(!matches!(st, CircuitState::PermanentlyLocked { .. }));
 }
+
+#[test]
+fn test_failure_burst_while_open_should_not_lockout_before_cooldown() {
+    let mut now = Instant::now();
+    let config = CircuitConfig::default(); // max_failures=3, flap_threshold=3, cooldown=30s
+    let mut breaker = UnitBreaker::new("burst-crash.service", now);
+
+    // 5 rapid failures in 500ms
+    for _ in 0..5 {
+        now += Duration::from_millis(100);
+        breaker.record_failure(now, &config);
+    }
+
+    let st = breaker.evaluate_state(now);
+    assert!(
+        matches!(st, CircuitState::Open { .. }),
+        "5 failures in 500ms should result in OPEN, but got {:?}",
+        st
+    );
+}
