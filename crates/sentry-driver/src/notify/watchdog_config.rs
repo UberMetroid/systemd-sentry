@@ -53,7 +53,7 @@ pub fn parse_watchdog_config(unset_env: bool) -> Result<Option<WatchdogConfig>, 
         env::remove_var("WATCHDOG_PID");
     }
 
-    let interval = Duration::from_micros(usec / 2);
+    let interval = Duration::from_micros((usec / 2).max(1));
 
     Ok(Some(WatchdogConfig {
         interval,

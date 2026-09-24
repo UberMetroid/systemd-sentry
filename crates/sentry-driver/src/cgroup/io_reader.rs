@@ -23,12 +23,26 @@ pub fn read_cgroup_io(cgroup_dir: &Path) -> Result<Vec<IoDeviceMetrics>, Telemet
         }
         let mut tokens = line.split_whitespace();
         let device = match tokens.next() {
-            Some(d) => d.to_string(),
+            Some(d) => d,
             None => continue,
         };
 
+        // Validate device conforms to MAJOR:MINOR with non-empty numeric components
+        let is_valid_device = match device.split_once(':') {
+            Some((maj, min)) => {
+                !maj.is_empty()
+                    && !min.is_empty()
+                    && maj.chars().all(|c| c.is_ascii_digit())
+                    && min.chars().all(|c| c.is_ascii_digit())
+            }
+            None => false,
+        };
+        if !is_valid_device {
+            continue;
+        }
+
         let mut dev = IoDeviceMetrics {
-            device,
+            device: device.to_string(),
             rbytes: 0,
             wbytes: 0,
             rios: 0,

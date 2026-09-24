@@ -44,7 +44,15 @@ impl<R: BufRead> JournalExportParser<R> {
 
         loop {
             line_buf.clear();
-            let bytes_read = self.reader.read_line(&mut line_buf).map_err(JournalError::Io)?;
+            let bytes_read = match self.reader.read_line(&mut line_buf) {
+                Ok(n) => n,
+                Err(e) => {
+                    if e.kind() == std::io::ErrorKind::InvalidData {
+                        let _ = resync_journal_stream(&mut self.reader);
+                    }
+                    return Err(JournalError::Io(e));
+                }
+            };
 
             if bytes_read == 0 {
                 // EOF reached

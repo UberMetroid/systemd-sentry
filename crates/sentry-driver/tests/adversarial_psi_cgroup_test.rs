@@ -133,6 +133,9 @@ extra_kernel_key 999
     let io_content = "\
 8:0 rbytes=1024 wbytes=2048 rios=10 wios=20 dbytes=0 dios=0
 malformed_line_no_tokens
+bad_device_no_colon rbytes=100
+8:notanumber rbytes=200
+:999 rbytes=300
 9:0 corrupted_token_no_equals rbytes=4096 wbytes=invalid
 ";
     fs::write(dir.path().join("io.stat"), io_content).unwrap();

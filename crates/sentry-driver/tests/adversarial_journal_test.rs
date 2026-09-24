@@ -178,8 +178,10 @@ fn test_adversarial_non_utf8_in_text_field() {
     let mut parser = JournalExportParser::new(cursor);
 
     let res = parser.parse_next_entry();
-    println!("Non-UTF8 in text line result: {res:?}");
+    assert!(res.is_err(), "Expected error for non-UTF8 in text line");
+
     let next = parser.parse_next_entry();
-    println!("Follow-up call result: {next:?}");
+    let entry = next.expect("resync failed after non-utf8").expect("expected recovered entry");
+    assert_eq!(entry.get_str("PRIORITY"), Some("6"));
 }
 

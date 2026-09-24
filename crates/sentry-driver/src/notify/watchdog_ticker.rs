@@ -17,7 +17,7 @@ impl WatchdogTicker {
     /// Spawns an asynchronous watchdog heartbeat loop in Tokio.
     pub fn spawn(config: WatchdogConfig) -> Self {
         let (cancel_tx, mut cancel_rx) = oneshot::channel();
-        let target_interval = config.interval;
+        let target_interval = config.interval.max(std::time::Duration::from_micros(1));
 
         let handle = tokio::spawn(async move {
             let mut ticker = interval(target_interval);

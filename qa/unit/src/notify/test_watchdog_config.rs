@@ -59,3 +59,15 @@ fn test_parse_watchdog_config_invalid_integer() {
     assert!(err.to_string().contains("Failed to parse WATCHDOG_USEC"));
     env::remove_var("WATCHDOG_USEC");
 }
+
+#[test]
+fn test_parse_watchdog_config_usec_one_clamped() {
+    let _guard = NOTIFY_ENV_LOCK.lock().unwrap();
+    env::set_var("WATCHDOG_USEC", "1");
+    let config = parse_watchdog_config(false)
+        .expect("Valid configuration")
+        .expect("Must produce Some(WatchdogConfig)");
+    assert_eq!(config.raw_usec, 1);
+    assert_eq!(config.interval, Duration::from_micros(1));
+    env::remove_var("WATCHDOG_USEC");
+}

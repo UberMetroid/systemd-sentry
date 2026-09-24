@@ -45,3 +45,20 @@ fn test_parse_listen_fds_zero_count_returns_empty() {
 fn test_sd_listen_fds_start_constant() {
     assert_eq!(SD_LISTEN_FDS_START, 3);
 }
+
+#[test]
+fn test_parse_listen_fds_exceeding_max_returns_error() {
+    let _guard = ACTIVATION_ENV_LOCK.lock().unwrap();
+    env::set_var("LISTEN_PID", process::id().to_string());
+    env::set_var("LISTEN_FDS", "4097");
+
+    let result = parse_listen_fds(false);
+    assert!(result.is_err());
+    assert!(matches!(
+        result.unwrap_err(),
+        sentry_driver::activation::ActivationError::InvalidFdCount(..)
+    ));
+
+    env::remove_var("LISTEN_PID");
+    env::remove_var("LISTEN_FDS");
+}

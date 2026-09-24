@@ -24,9 +24,16 @@ pub fn send_notify(states: &[NotifyState], unset_env: bool) -> Result<bool, Noti
     let addr = resolve_notify_address(&socket_var)?;
     let payload = encode_notify_payload(states);
     let socket = UnixDatagram::unbound()?;
-    socket.send_to_addr(payload.as_bytes(), &addr)?;
+    socket.set_nonblocking(true)?;
 
-    Ok(true)
+    match socket.send_to_addr(payload.as_bytes(), &addr) {
+        Ok(_) => Ok(true),
+        Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+            // Socket buffer full; non-blocking send avoids thread stall
+            Ok(false)
+        }
+        Err(e) => Err(NotifyError::Io(e)),
+    }
 }
 
 /// Convenience helper: notifies systemd that service is READY (`READY=1`).

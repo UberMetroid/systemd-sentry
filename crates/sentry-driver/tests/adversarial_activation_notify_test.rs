@@ -100,12 +100,11 @@ fn test_adversarial_listen_fds_extreme_overflow_check() {
     env::set_var("LISTEN_PID", process::id().to_string());
     env::set_var("LISTEN_FDS", usize::MAX.to_string());
 
-    // Attempt parsing with usize::MAX
-    let panic_res = std::panic::catch_unwind(|| {
-        let _ = parse_listen_fds(false);
-    });
-
-    println!("Extreme LISTEN_FDS panic result: {panic_res:?}");
+    let res = parse_listen_fds(false);
+    assert!(
+        matches!(res, Err(sentry_driver::activation::ActivationError::InvalidFdCount(..))),
+        "Expected InvalidFdCount error on extreme LISTEN_FDS, got: {res:?}"
+    );
 
     env::remove_var("LISTEN_FDS");
     env::remove_var("LISTEN_PID");
@@ -165,11 +164,11 @@ fn test_adversarial_watchdog_config_boundary_and_corrupt() {
     env::set_var("WATCHDOG_PID", (process::id() + 1000).to_string());
     assert_eq!(parse_watchdog_config(false).unwrap(), None);
 
-    // Watchdog USEC=1 leads to interval 1 / 2 = 0 us
+    // Watchdog USEC=1 leads to interval clamped to at least 1 us
     env::set_var("WATCHDOG_USEC", "1");
     env::remove_var("WATCHDOG_PID");
     let cfg1 = parse_watchdog_config(false).unwrap().expect("should parse 1");
-    assert_eq!(cfg1.interval, std::time::Duration::ZERO);
+    assert_eq!(cfg1.interval, std::time::Duration::from_micros(1));
 
     env::remove_var("WATCHDOG_USEC");
 }
@@ -184,8 +183,7 @@ async fn test_adversarial_watchdog_ticker_zero_interval_panic() {
     };
 
     let ticker = WatchdogTicker::spawn(zero_cfg);
-    let join_res = ticker.stop().await;
-    println!("Watchdog zero interval task join result: {:?}", join_res);
+    ticker.stop().await;
 }
 
 #[test]

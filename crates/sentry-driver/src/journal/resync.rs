@@ -28,7 +28,7 @@ pub fn resync_journal_stream<R: BufRead>(reader: &mut R) -> Result<usize, Journa
                     break;
                 }
                 last_byte_was_newline = true;
-            } else {
+            } else if b != b'\r' {
                 last_byte_was_newline = false;
             }
         }
