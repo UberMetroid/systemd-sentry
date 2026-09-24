@@ -129,3 +129,10 @@ impl CircuitBreakerRegistry {
         }
     }
 }
+
+impl Default for CircuitBreakerRegistry {
+    fn default() -> Self {
+        Self::new(CircuitConfig::default())
+    }
+}
+

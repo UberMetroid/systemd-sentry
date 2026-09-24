@@ -101,9 +101,18 @@ impl UnitBreaker {
                 flap_trips: self.trip_timestamps.len(),
             };
         } else {
+            let trip_count = self.trip_timestamps.len().max(1);
+            let exponent = (trip_count - 1).min(30) as u32;
+            let multiplier = 1u32.checked_shl(exponent).unwrap_or(u32::MAX);
+            let cooldown = config
+                .cooldown_duration
+                .checked_mul(multiplier)
+                .map(|d| d.min(config.max_cooldown))
+                .unwrap_or(config.max_cooldown);
+
             self.state = CircuitState::Open {
                 tripped_at: now,
-                cooldown: config.cooldown_duration,
+                cooldown,
                 failure_count: count,
             };
         }

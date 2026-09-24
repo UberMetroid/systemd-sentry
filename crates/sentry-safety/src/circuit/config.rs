@@ -10,8 +10,10 @@ pub struct CircuitConfig {
     pub max_failures: usize,
     /// Rolling time window for failure tracking.
     pub window_duration: Duration,
-    /// Cooldown duration during OPEN state before transitioning to HalfOpen.
+    /// Base cooldown duration during OPEN state before transitioning to HalfOpen.
     pub cooldown_duration: Duration,
+    /// Maximum exponential backoff cooldown duration.
+    pub max_cooldown: Duration,
     /// Time window for monitoring trip frequency to detect flapping.
     pub flap_window: Duration,
     /// Number of breaker trips within `flap_window` that permanently locks the unit.
@@ -22,10 +24,11 @@ impl Default for CircuitConfig {
     fn default() -> Self {
         Self {
             max_failures: 3,
-            window_duration: Duration::from_secs(300),   // 5 minutes
-            cooldown_duration: Duration::from_secs(600), // 10 minutes
-            flap_window: Duration::from_secs(900),       // 15 minutes
-            flap_threshold: 3,                           // 3 trips in 15 mins -> Lockout
+            window_duration: Duration::from_secs(60),
+            cooldown_duration: Duration::from_secs(30),
+            max_cooldown: Duration::from_secs(1800),
+            flap_window: Duration::from_secs(900),
+            flap_threshold: 3,
         }
     }
 }
@@ -43,8 +46,20 @@ impl CircuitConfig {
             max_failures: max_failures.max(1),
             window_duration,
             cooldown_duration,
+            max_cooldown: Duration::from_secs(1800).max(cooldown_duration),
             flap_window,
             flap_threshold: flap_threshold.max(1),
         }
+    }
+
+    /// Sets a custom maximum cooldown duration for exponential backoff.
+    pub fn with_max_cooldown(mut self, max_cooldown: Duration) -> Self {
+        self.max_cooldown = max_cooldown;
+        self
+    }
+
+    /// Returns the base cooldown duration.
+    pub fn base_cooldown(&self) -> Duration {
+        self.cooldown_duration
     }
 }

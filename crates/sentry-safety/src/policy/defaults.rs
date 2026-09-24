@@ -8,6 +8,7 @@ pub const DEFAULT_PROTECTED_UNITS: &[&str] = &[
     "systemd-journald.service",
     "systemd-logind.service",
     "systemd-udevd.service",
+    "systemd-resolved.service",
     "dbus.service",
     "sshd.service",
     "ssh.service",

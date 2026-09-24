@@ -13,6 +13,14 @@ fn test_default_policy_contains_critical_units() {
         );
     }
 
+    assert!(
+        policy
+            .global
+            .protected_units
+            .contains(&"systemd-resolved.service".to_string()),
+        "Expected systemd-resolved.service in default protected units"
+    );
+
     assert!(policy.global.allowed_actions.contains(&RemediationAction::RestartWithBackoff));
     assert!(policy.global.allowed_actions.contains(&RemediationAction::Reload));
     assert!(policy.global.allowed_actions.contains(&RemediationAction::ResetFailed));

@@ -21,6 +21,7 @@ fn test_unit_breaker_trip_and_cooldown_to_half_open() {
         max_failures: 2,
         window_duration: Duration::from_secs(60),
         cooldown_duration: Duration::from_secs(10),
+        max_cooldown: Duration::from_secs(1800),
         flap_window: Duration::from_secs(300),
         flap_threshold: 3,
     };
@@ -59,20 +60,21 @@ fn test_unit_breaker_flapping_lockout_and_operator_reset() {
         max_failures: 1,
         window_duration: Duration::from_secs(60),
         cooldown_duration: Duration::from_secs(5),
+        max_cooldown: Duration::from_secs(1800),
         flap_window: Duration::from_secs(60),
         flap_threshold: 3,
     };
 
     let mut breaker = UnitBreaker::new("flapper.service", now);
 
-    // Trip 1
+    // Trip 1 (cooldown = 5s * 2^0 = 5s)
     breaker.record_failure(now, &config);
     now += Duration::from_secs(6);
     breaker.evaluate_state(now); // HalfOpen
 
-    // Trip 2
+    // Trip 2 (cooldown = 5s * 2^1 = 10s)
     breaker.record_failure(now, &config);
-    now += Duration::from_secs(6);
+    now += Duration::from_secs(11);
     breaker.evaluate_state(now); // HalfOpen
 
     // Trip 3 -> PermanentlyLocked!
@@ -88,4 +90,75 @@ fn test_unit_breaker_flapping_lockout_and_operator_reset() {
     let snap = breaker.snapshot(now);
     assert_eq!(snap.state, "CLOSED");
     assert!(!snap.permanently_locked);
+}
+
+#[test]
+fn test_unit_breaker_exponential_backoff() {
+    let mut now = Instant::now();
+    let config = CircuitConfig {
+        max_failures: 1,
+        window_duration: Duration::from_secs(60),
+        cooldown_duration: Duration::from_secs(10), // base cooldown = 10s
+        max_cooldown: Duration::from_secs(50),      // max cooldown = 50s
+        flap_window: Duration::from_secs(600),
+        flap_threshold: 10,                         // high threshold to observe multiple backoffs
+    };
+
+    let mut breaker = UnitBreaker::new("scaling.service", now);
+
+    // Trip 1: 10s * 2^0 = 10s
+    let st = breaker.record_failure(now, &config);
+    assert_eq!(
+        *st,
+        CircuitState::Open {
+            tripped_at: now,
+            cooldown: Duration::from_secs(10),
+            failure_count: 1,
+        }
+    );
+
+    // Transition to HalfOpen after 10s
+    now += Duration::from_secs(10);
+    assert_eq!(*breaker.evaluate_state(now), CircuitState::HalfOpen);
+
+    // Trip 2: 10s * 2^1 = 20s
+    let st = breaker.record_failure(now, &config);
+    assert_eq!(
+        *st,
+        CircuitState::Open {
+            tripped_at: now,
+            cooldown: Duration::from_secs(20),
+            failure_count: 1,
+        }
+    );
+
+    // Transition to HalfOpen after 20s
+    now += Duration::from_secs(20);
+    assert_eq!(*breaker.evaluate_state(now), CircuitState::HalfOpen);
+
+    // Trip 3: 10s * 2^2 = 40s
+    let st = breaker.record_failure(now, &config);
+    assert_eq!(
+        *st,
+        CircuitState::Open {
+            tripped_at: now,
+            cooldown: Duration::from_secs(40),
+            failure_count: 1,
+        }
+    );
+
+    // Transition to HalfOpen after 40s
+    now += Duration::from_secs(40);
+    assert_eq!(*breaker.evaluate_state(now), CircuitState::HalfOpen);
+
+    // Trip 4: 10s * 2^3 = 80s -> clamped to max_cooldown (50s)
+    let st = breaker.record_failure(now, &config);
+    assert_eq!(
+        *st,
+        CircuitState::Open {
+            tripped_at: now,
+            cooldown: Duration::from_secs(50),
+            failure_count: 1,
+        }
+    );
 }
