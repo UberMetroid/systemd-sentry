@@ -87,7 +87,21 @@ pub fn scan_journal_patterns(lines: &[String]) -> Option<JournalMatchResult> {
             });
         }
 
-        // 5. Unhandled Panic / Assertion
+        // 5. Kernel panic post-mortem (systemd-pstore)
+        if lower.contains("kernel panic - not syncing") || lower.contains("kernel bug at") {
+            return Some(JournalMatchResult {
+                root_cause: RootCause {
+                    summary: "Kernel panic detected in post-mortem buffer (systemd-pstore)".to_string(),
+                    detail: format!("Journal records kernel panic: '{line}'"),
+                },
+                severity: Severity::Critical,
+                action: RemediationAction::EscalateToAdmin,
+                risk_level: RiskLevel::High,
+                confidence_permille: 950,
+            });
+        }
+
+        // 6. Unhandled Userspace Panic / Assertion
         if lower.contains("panic") || lower.contains("assertion failed") {
             return Some(JournalMatchResult {
                 root_cause: RootCause {
@@ -112,6 +126,60 @@ pub fn scan_journal_patterns(lines: &[String]) -> Option<JournalMatchResult> {
                 action: RemediationAction::NoAction,
                 risk_level: RiskLevel::High,
                 confidence_permille: 950,
+            });
+        }
+
+        // 7. DNS resolution failure (systemd-resolved)
+        if lower.contains("eai_again")
+            || lower.contains("name or service not known")
+            || lower.contains("getaddrinfo failed")
+            || lower.contains("nxdomain")
+            || lower.contains("temporary failure in name resolution")
+        {
+            return Some(JournalMatchResult {
+                root_cause: RootCause {
+                    summary: "DNS resolution failure in system resolver (systemd-resolved)".to_string(),
+                    detail: format!("Journal records resolver failure: '{line}'"),
+                },
+                severity: Severity::Medium,
+                action: RemediationAction::RestartWithBackoff,
+                risk_level: RiskLevel::Low,
+                confidence_permille: 900,
+            });
+        }
+
+        // 8. Network link down or carrier loss (systemd-networkd)
+        if lower.contains("network is unreachable")
+            || lower.contains("no route to host")
+            || lower.contains("carrier lost")
+            || lower.contains("ehostunreach")
+        {
+            return Some(JournalMatchResult {
+                root_cause: RootCause {
+                    summary: "Network carrier lost or routing unreachable (systemd-networkd)".to_string(),
+                    detail: format!("Journal records network carrier disconnection: '{line}'"),
+                },
+                severity: Severity::Medium,
+                action: RemediationAction::RestartWithBackoff,
+                risk_level: RiskLevel::Low,
+                confidence_permille: 900,
+            });
+        }
+
+        // 9. TLS Clock drift / certificate window validity (systemd-timesyncd)
+        if lower.contains("cert_date_invalid")
+            || lower.contains("certificate has expired or is not yet valid")
+            || lower.contains("ssl_error_cert_expired")
+        {
+            return Some(JournalMatchResult {
+                root_cause: RootCause {
+                    summary: "TLS certificate validity error or clock drift (systemd-timesyncd)".to_string(),
+                    detail: format!("Journal records certificate validity error: '{line}'"),
+                },
+                severity: Severity::High,
+                action: RemediationAction::EscalateToAdmin,
+                risk_level: RiskLevel::Medium,
+                confidence_permille: 850,
             });
         }
     }

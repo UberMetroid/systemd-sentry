@@ -24,3 +24,15 @@ pub mod mcp;
 pub mod safety;
 #[cfg(test)]
 pub mod daemon;
+#[cfg(test)]
+pub mod inhibit;
+#[cfg(test)]
+pub mod networkd;
+#[cfg(test)]
+pub mod pstore;
+#[cfg(test)]
+pub mod resolved;
+#[cfg(test)]
+pub mod timesync;
+#[cfg(test)]
+pub mod user_session;

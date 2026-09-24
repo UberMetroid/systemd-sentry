@@ -8,10 +8,16 @@ pub mod activation;
 pub mod cgroup;
 pub mod coredump;
 pub mod dbus;
+pub mod inhibit;
 pub mod journal;
 pub mod logind;
+pub mod networkd;
 pub mod notify;
+pub mod pstore;
 pub mod psi;
+pub mod resolved;
+pub mod timesync;
+pub mod user_session;
 
 pub use activation::{
     parse_listen_fds, parse_listen_fdnames, validate_listen_pid, ActivatedSocket, ActivationError,
@@ -43,3 +49,12 @@ pub use notify::{
 pub use psi::{
     collect_cgroup_psi, collect_system_psi, parse_psi_line, parse_psi_record, read_psi_file,
 };
+pub use inhibit::{InhibitorLock, ShutdownWatcher};
+pub use networkd::NetworkdClient;
+pub use pstore::{
+    extract_panic_report, parse_pstore_file, scan_directory, scan_pstore_reports,
+    MAX_PSTORE_REPORTS,
+};
+pub use resolved::ResolvedClient;
+pub use timesync::TimesyncClient;
+pub use user_session::UserSessionDiscoverer;

@@ -18,4 +18,5 @@ pub use models::{
     CoredumpXattrs, CpuStat, DiagnosticPayload, DriverEvent, Evidence, IncidentContext,
     IoDeviceMetrics, JournalEntryDetails, MemoryEvents, PressureTelemetry, ProposedRemediation,
     PsiLine, PsiRecord, RemediationAction, RiskLevel, RootCause, Severity, UnitFailedDetails,
+    DnsHealthState, NetworkOperationalState, PstorePanicReport, ShutdownState, TimeSyncStatus,
 };

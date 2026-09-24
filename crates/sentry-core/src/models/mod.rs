@@ -8,6 +8,7 @@ pub mod incident_context;
 pub mod psi;
 pub mod remediation;
 pub mod severity;
+pub mod system_state;
 
 pub use cgroup::{
     CgroupCpuStats, CgroupIoDeviceStats, CgroupMemoryStats, CgroupTelemetry, CpuStat,
@@ -22,3 +23,6 @@ pub use incident_context::IncidentContext;
 pub use psi::{PressureTelemetry, PsiLine, PsiRecord};
 pub use remediation::RemediationAction;
 pub use severity::Severity;
+pub use system_state::{
+    DnsHealthState, NetworkOperationalState, PstorePanicReport, ShutdownState, TimeSyncStatus,
+};

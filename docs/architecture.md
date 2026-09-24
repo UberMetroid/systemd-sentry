@@ -24,6 +24,7 @@
 |   • D-Bus Signal Listener (UnitNew, JobRemoved, PropertiesChanged)                |
 |   • Kernel Telemetry Collector (zero-alloc PSI stack reader, cgroups v2 memory)   |
 |   • Extended Attribute Coredump Scanner (rustix getxattr, no binary buffering)   |
+|   • Subsystem Drivers: inhibit, resolved, networkd, timesyncd, pstore, user-bus   |
 +-----------------------------------------------------------------------------------+
                                         |
                                         v
@@ -67,3 +68,21 @@
 3. **No Network Listening Ports**: Sentry does not open or listen on any TCP or UDP ports. All incoming queries use the local UNIX socket authorized by the kernel via `SO_PEERCRED`.
 4. **Credential Isolation**: API keys are never stored in plaintext on disk. They are decrypted into a dedicated memory-mapped tmpfs using `systemd-creds` and TPM2 hardware sealing.
 5. **Memory & Syscall Ceiling**: All buffers are bounded. The daemon continuously monitors `/proc/self/statm` and sheds background tasks at 13MB RSS to maintain strict operation on low-spec VPS hosts (512MB RAM).
+
+---
+
+## 3. Subsystem Integration Matrix
+
+| Subsystem | Bus / Path | Primary Role |
+| :--- | :--- | :--- |
+| `systemd-journald` | `/run/systemd/journal/io...` | Zero-copy causal stream slicing & UTF-8 resync |
+| `systemd-oomd` | `/proc/pressure/memory`, cgroups v2 | PSI pressure telemetry & OOM kill detection |
+| `systemd-coredump` | `/var/lib/systemd/coredump/` | Bounded xattr metadata inspection (no binary reads) |
+| `systemd-creds` | `$CREDENTIALS_DIRECTORY` | TPM2 encrypted secret discovery |
+| `systemd-inhibit` | `org.freedesktop.login1` | Shutdown/sleep delay lock & alert suppression |
+| `systemd-resolved` | `org.freedesktop.resolve1` | DNS outage correlation & lookup verification |
+| `systemd-networkd` | `org.freedesktop.network1` | Link carrier state correlation (`OperationalState`) |
+| `systemd-timesyncd`| `org.freedesktop.timesync1` | NTP synchronization & TLS validity verification |
+| `systemd-pstore` | `/sys/fs/pstore/` | Bounded kernel panic log harvesting |
+| `systemd --user` | `/run/user/<UID>/bus` | Rootless session discovery & per-user supervision |
+

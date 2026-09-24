@@ -129,7 +129,7 @@ auto_remediate = true
 ## Documentation
 
 * 🏛️ [System Architecture](docs/architecture.md): Subsystems, dataflow, and zero-trust guarantees.
-* 🛡️ [Hardening & Systemd Integrations](docs/hardening.md): Kernel capabilities, `systemd-creds`, `systemd-oomd`, and `systemd-coredump`.
+* 🛡️ [Hardening & Systemd Integrations](docs/hardening.md): Kernel capabilities, `systemd-creds`, `systemd-oomd`, `systemd-coredump`, `systemd-inhibit`, `systemd-resolved`, `systemd-networkd`, `systemd-timesyncd`, `systemd-pstore`, and `systemd --user`.
 * 📜 [Policy Reference Guide](docs/policy_reference.md): Drop-in `.d/` precedence, circuit state machines, and flap lockout.
 * 🧠 [Diagnostic Providers & Inference](docs/providers.md): Edge Ollama, llama.cpp, OpenAI-compatible APIs, and fallback heuristics.
 * 🔌 [Model Context Protocol (MCP)](docs/mcp.md): Stdio MCP server setup for Claude Desktop, Cursor, and agent runtimes.
@@ -186,7 +186,7 @@ When a service fails or a circuit breaker trips, Sentry queries `systemd-logind`
 * **Language**: 100% Pure Rust (no C dynamic libraries: `zbus`, pure Rust socket writer, `rustls`).
 * **Source Constraints**: Strictly $\le 256$ lines per file; single function per file.
 * **Testing**: 1:1 unit QA tests for every function, edge test suite, and `cargo-fuzz` targets.
-* **System Integration**: `Type=notify`, `WatchdogSec`, socket activation, `sysusers.d`, `tmpfiles.d`, `dbus-1` policies, cgroups v2, kernel PSI, and `systemd-coredump`.
+* **System Integration**: `Type=notify`, `WatchdogSec`, socket activation, `sysusers.d`, `tmpfiles.d`, `dbus-1` policies, cgroups v2, kernel PSI, `systemd-coredump`, `systemd-inhibit`, `systemd-resolved`, `systemd-networkd`, `systemd-timesyncd`, `systemd-pstore`, and `systemd --user`.
 * **Design Principles**: Built on [Unix Philosophy, Torvalds Pragmatism, and systemd Integration](docs/design_principles.md).
 
 ---
