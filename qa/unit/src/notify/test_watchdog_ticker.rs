@@ -3,9 +3,9 @@
 use super::NOTIFY_ENV_LOCK;
 use sentry_driver::notify::{WatchdogConfig, WatchdogTicker};
 use std::env;
-use std::os::unix::net::UnixDatagram;
 use std::time::Duration;
 use tempfile::tempdir;
+use tokio::net::UnixDatagram;
 
 #[tokio::test]
 async fn test_watchdog_ticker_sends_heartbeats() {
@@ -25,12 +25,11 @@ async fn test_watchdog_ticker_sends_heartbeats() {
     let ticker = WatchdogTicker::spawn(config);
 
     let mut buf = [0u8; 64];
-    receiver
-        .set_read_timeout(Some(Duration::from_millis(1000)))
-        .unwrap();
-    let (n, _) = receiver
-        .recv_from(&mut buf)
+    let (n, _) = tokio::time::timeout(Duration::from_secs(2), receiver.recv_from(&mut buf))
+        .await
+        .expect("Timeout waiting for watchdog tick")
         .expect("Must receive at least one watchdog heartbeat");
+
     let msg = std::str::from_utf8(&buf[..n]).unwrap();
     assert_eq!(msg, "WATCHDOG=1\n");
 
