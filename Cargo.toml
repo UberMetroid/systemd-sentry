@@ -5,6 +5,7 @@ members = [
     "crates/sentry-driver",
     "crates/sentry-diagnostic",
     "crates/sentry-mcp",
+    "crates/sentry-safety",
     "qa/unit",
 ]
 
@@ -21,6 +22,7 @@ sentry-core = { path = "crates/sentry-core" }
 sentry-driver = { path = "crates/sentry-driver" }
 sentry-diagnostic = { path = "crates/sentry-diagnostic" }
 sentry-mcp = { path = "crates/sentry-mcp" }
+sentry-safety = { path = "crates/sentry-safety" }
 
 # HTTP client & async traits (pure Rust TLS, zero libssl/libcrypto)
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
@@ -36,6 +38,7 @@ rustix = { version = "0.38", features = ["fs", "net", "process", "event"] }
 # Pure Rust serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["std"] }
+toml = { version = "0.8", default-features = false, features = ["parse", "display"] }
 
 # Error handling
 thiserror = { version = "2.0" }

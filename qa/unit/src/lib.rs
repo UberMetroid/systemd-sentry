@@ -20,3 +20,5 @@ pub mod psi;
 pub mod diagnostic;
 #[cfg(test)]
 pub mod mcp;
+#[cfg(test)]
+pub mod safety;

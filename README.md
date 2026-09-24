@@ -7,6 +7,9 @@
 [![Language: Rust](https://img.shields.io/badge/Language-Pure%20Rust-orange.svg)](https://www.rust-lang.org/)
 [![Platform: Linux / systemd](https://img.shields.io/badge/Platform-Linux%20%2F%20systemd-red.svg)](https://systemd.io/)
 [![Zero C Dependencies](https://img.shields.io/badge/Dependencies-Zero%20C%20Libs-green.svg)](#architecture)
+[![Website: Online](https://img.shields.io/badge/Website-ubermetroid.github.io%2Fsystemd--sentry-blue.svg)](https://ubermetroid.github.io/systemd-sentry/)
+
+> 🌐 **Official Website & Architecture Guide:** [https://ubermetroid.github.io/systemd-sentry/](https://ubermetroid.github.io/systemd-sentry/)
 
 ---
 

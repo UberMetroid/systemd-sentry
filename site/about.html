@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About — systemd-sentry</title>
+  <meta name="description" content="Design philosophy, architecture, Unix principles, and engineering invariants of systemd-sentry.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="page-head">
+      <div class="back">
+        <a href="index.html">&larr; back to systemd-sentry</a>
+      </div>
+      <div class="tag">about / v0.1.0</div>
+    </header>
+
+    <h1>About <span class="accent">systemd-sentry</span>.</h1>
+    <p class="lede" style="font-size: 1.1rem; color: var(--fg-muted);">
+      Design principles, architectural invariants, Unix philosophy, and systemd integration.
+    </p>
+
+    <section>
+      <h2><span class="num">01</span>The Genesis: Moving Beyond Blind Restarts</h2>
+      <p>
+        System supervision in Linux has historically been trapped between two extremes:
+        either a crude <code>Restart=always</code> directive in a systemd unit file that
+        blindly restarts a crashing service until system resources are exhausted, or an
+        over-engineered observability stack requiring hundreds of megabytes of RAM, external
+        agents, and complex network telemetry pipelines.
+      </p>
+      <p>
+        <strong>systemd-sentry</strong> was designed from first principles to bridge this gap:
+        an autonomous, zero-trust host supervisor that detects failures in real time, extracts
+        rich kernel and journal telemetry, synthesizes root cause diagnostics, and applies
+        deterministic circuit breaking to permanently stop flapping failure storms.
+      </p>
+    </section>
+
+    <section>
+      <h2><span class="num">02</span>Unix Philosophy: Mechanism vs. Policy</h2>
+      <p>
+        Following classical Unix design principles codified by McIlroy, Thompson, and Ritchie:
+      </p>
+      <ul class="benefits">
+        <li>
+          <strong>Separation of Mechanism &amp; Policy.</strong>
+          <span>The telemetry drivers (<code>sentry-driver</code>) and diagnostic engine (<code>sentry-diagnostic</code>)
+          provide the <em>mechanism</em> of discovering why a failure occurred. The declarative policy engine
+          (<code>sentry-safety</code>) enforces the <em>policy</em> of what actions are permissible.</span>
+        </li>
+        <li>
+          <strong>Silence on Success.</strong>
+          <span>When managed services are healthy, <code>systemd-sentry</code> produces zero log noise
+          and sleeps inside the kernel <code>epoll_wait</code> event loop with 0.0% CPU utilization.</span>
+        </li>
+        <li>
+          <strong>Composable Streams &amp; Standard Exit Codes.</strong>
+          <span>All CLI commands emit clean, parseable text or structured JSON (via <code>--json</code>),
+          and return standard exit codes (e.g. <code>EX_CONFIG = 78</code> for pre-flight syntax errors).</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">03</span>Linus Torvalds Pragmatism</h2>
+      <p>
+        Engineered for real-world production Linux servers with zero patience for bloat:
+      </p>
+      <ul class="benefits">
+        <li>
+          <strong>Zero Unnecessary Abstractions.</strong>
+          <span>Direct interaction with Linux kernel subsystems via <code>rustix</code> syscalls:
+          cgroups v2 (<code>/sys/fs/cgroup/</code>), Pressure Stall Information (<code>/proc/pressure/</code>),
+          and raw Journal Export streams.</span>
+        </li>
+        <li>
+          <strong>Zero Panics in Daemon Paths.</strong>
+          <span>Strictly zero runtime calls to <code>.unwrap()</code> or <code>.expect()</code> on active daemon
+          event paths. All I/O and protocol errors propagate through structured error hierarchies or safely
+          fall back to deterministic heuristics.</span>
+        </li>
+        <li>
+          <strong>Strict &lt;15MB RSS Memory Budget.</strong>
+          <span>Bounded data structures throughout: 100-item incident ring buffer, 512-unit circuit breaker registry,
+          64 KiB maximum policy file size, and automatic load shedding when memory pressure is detected.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">04</span>systemd Design Alignment</h2>
+      <p>
+        <code>systemd-sentry</code> integrates as a native, first-class citizen of modern systemd environments:
+      </p>
+      <ul class="benefits">
+        <li>
+          <strong>Socket Activation.</strong>
+          <span>Inherits listening sockets via <code>$LISTEN_FDS</code> (file descriptors 3..N), allowing the
+          systemd manager to buffer client requests before the daemon even starts.</span>
+        </li>
+        <li>
+          <strong>Drop-In Configuration Directories.</strong>
+          <span>Full support for <code>/etc/systemd-sentry/policy.d/*.toml</code> drop-in files, merged in
+          strict alphanumeric order to allow seamless configuration management via Ansible, Puppet, or Nix.</span>
+        </li>
+        <li>
+          <strong>Credential Security.</strong>
+          <span>Integrates with <code>systemd-creds</code> for encrypted API keys and credential passing,
+          eliminating plaintext secrets in configuration files or process command-line arguments.</span>
+        </li>
+        <li>
+          <strong>Privilege Dropping &amp; Hardened Sandboxing.</strong>
+          <span>Runs as unprivileged user <code>sentry</code> in the <code>systemd-journal</code> group with
+          <code>ProtectSystem=strict</code>, <code>ProtectHome=yes</code>, and <code>MemoryDenyWriteExecute=yes</code>.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">05</span>Codebase Architecture</h2>
+      <p>
+        The workspace is partitioned into specialized, single-responsibility crates with strict
+        file length constraints (&le;256 LOC per file):
+      </p>
+<pre><code>systemd-sentry/
+├── crates/
+│   ├── sentry-core/        Domain models, cgroups v2, PSI, coredumps, error types
+│   ├── sentry-driver/      Pure Rust socket activation, sd_notify, journal, D-Bus
+│   ├── sentry-diagnostic/  LLM clients (Ollama, llama.cpp, OpenAI) &amp; fallback triage
+│   ├── sentry-mcp/         Model Context Protocol stdio server for AI agents
+│   └── sentry-safety/      Sliding-window circuit breaker &amp; drop-in policy gatekeeper
+├── qa/
+│   ├── unit/               1:1 Unit QA test suite (200 tests)
+│   ├── e2e/                4-tier E2E feature verification suite (87 tests)
+│   ├── fixtures/           Crashing mock binaries (segfault, OOM, flapper)
+│   └── fuzz/               cargo-fuzz targets (journal, D-Bus, PSI, triage)
+├── systemd/                Unit files (.service, .socket, sysusers.d, tmpfiles.d, dbus-1)
+└── site/                   Static documentation &amp; GitHub Pages website</code></pre>
+    </section>
+
+    <footer class="site">
+      <div>
+        <a href="index.html">&larr; Overview</a> &middot;
+        <a href="https://github.com/UberMetroid/systemd-sentry">GitHub Repository</a> &middot;
+        <a href="https://github.com/UberMetroid/systemd-sentry/blob/main/docs/design_principles.md">Design Principles</a> &middot;
+        <a href="https://github.com/UberMetroid/systemd-sentry/blob/main/docs/ipc_api.md">IPC API Spec</a>
+      </div>
+      <div>systemd-sentry &copy; 2026 systemd-sentry contributors</div>
+    </footer>
+
+  </div>
+</body>
+</html>

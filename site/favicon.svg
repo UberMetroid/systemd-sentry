@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a1612" />
+      <stop offset="100%" stop-color="#2a241f" />
+    </linearGradient>
+  </defs>
+  <!-- Outer Shield -->
+  <path d="M32 4 L56 12 V32 C56 46 45 57 32 60 C19 57 8 46 8 32 V12 Z" fill="url(#shieldGrad)" stroke="#ce422b" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Inner Circuit Ring -->
+  <circle cx="32" cy="30" r="14" fill="none" stroke="#ce422b" stroke-width="2" stroke-dasharray="4,2"/>
+  <!-- Core Sentry Reticle -->
+  <circle cx="32" cy="30" r="6" fill="#ce422b" />
+  <line x1="32" y1="18" x2="32" y2="42" stroke="#fbf8f3" stroke-width="1.5"/>
+  <line x1="20" y1="30" x2="44" y2="30" stroke="#fbf8f3" stroke-width="1.5"/>
+</svg>

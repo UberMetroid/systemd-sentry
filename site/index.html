@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>systemd-sentry — autonomous zero-trust supervisor for systemd</title>
+  <meta name="description" content="Autonomous, zero-trust system supervisor written in 100% pure Rust for systemd-managed Linux environments. Deterministic circuit-breaking, root-cause triage, and guarded self-healing.">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="hero">
+      <p class="eyebrow">systemd-sentry · v0.1.0</p>
+      <h1>Autonomous, zero-trust supervisor for <span class="accent">systemd</span>.</h1>
+      <p class="lede">
+        <strong>systemd-sentry</strong> (<code>sentry</code>) brings deterministic root-cause
+        triage, sliding-window circuit-breaking, and guarded self-healing to <code>systemd</code>
+        Linux environments. Built in <strong>100% pure Rust</strong> with direct kernel syscalls,
+        zero C dynamic library dependencies, zero open network listeners, and a strict
+        <strong>&lt;15MB RSS</strong> memory budget.
+      </p>
+      <div class="badge-bar">
+        <span class="highlight">100% Pure Rust</span>
+        <span>Zero Dynamic C Libs</span>
+        <span>Zero TCP Listeners</span>
+        <span>systemd Native</span>
+        <span>Model Context Protocol</span>
+        <span>Apache-2.0 / MIT</span>
+      </div>
+    </header>
+
+    <section>
+      <h2><span class="num">01</span>Why 100% Pure Rust & Zero C Dependencies?</h2>
+      <p>
+        Traditional system daemons link against <code>libsystemd.so</code>, <code>libdbus-1.so</code>,
+        and OpenSSL (<code>libssl.so</code> / <code>libcrypto.so</code>). This creates brittle ABI bindings,
+        supply-chain CVE exposure, and dynamic linking failures during system recovery.
+        <code>systemd-sentry</code> takes a zero-compromise approach:
+      </p>
+      <ul class="benefits">
+        <li>
+          <strong>Zero C Library Linkage.</strong>
+          <span>Zero dynamic dependencies on <code>libsystemd</code>, <code>libdbus-1</code>,
+          or OpenSSL. Uses pure Rust D-Bus (<code>zbus</code>) and pure Rust TLS
+          (<code>rustls</code>). Audited on every build by <code>scripts/check_deps.sh</code>.</span>
+        </li>
+        <li>
+          <strong>Direct Kernel Interfaces.</strong>
+          <span>Direct Linux syscalls via <code>rustix</code>. Reads cgroups v2 resource accounting
+          (<code>/sys/fs/cgroup/</code>) and kernel Pressure Stall Information (<code>/proc/pressure/</code>)
+          using zero-allocation buffer pipelines.</span>
+        </li>
+        <li>
+          <strong>Native systemd Citizen.</strong>
+          <span>Socket activation parsing <code>$LISTEN_FDS</code> (FDs 3..N), non-blocking
+          <code>sd_notify</code> ticker writing directly to <code>$NOTIFY_SOCKET</code>, and
+          first-class drop-in configuration support (<code>/etc/systemd-sentry/policy.d/*.toml</code>).</span>
+        </li>
+        <li>
+          <strong>Deterministic Static Binary.</strong>
+          <span>A single static binary that drops into any Linux distribution running kernel 5.8+
+          with zero runtime library prerequisites.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">02</span>Zero-Trust Safety Engine & Circuit Breaker</h2>
+      <p>
+        AI inference is powerful for diagnosis, but handing autonomous shell execution to an LLM
+        on production Linux servers is an operational disaster. <code>systemd-sentry</code> enforces
+        strict separation of mechanism and policy:
+      </p>
+      <ul class="benefits">
+        <li>
+          <strong>The LLM is Strictly Advisory.</strong>
+          <span>The diagnostic engine has <strong>zero shell access</strong> and cannot execute arbitrary
+          commands. It emits strictly validated JSON containing root-cause analysis and proposed remediation.</span>
+        </li>
+        <li>
+          <strong>Deterministic Sliding-Window Circuit Breaker.</strong>
+          <span>Tracks failure frequency per unit across configurable rolling windows. Tripped units
+          transition to <code>Open</code>, and flapping units enter <code>PermanentlyLocked</code>,
+          preventing restart storm cascades.</span>
+        </li>
+        <li>
+          <strong>Drop-In Policy Enforcement.</strong>
+          <span>All actions pass through <code>PolicyGatekeeper</code>, evaluating allowed actions against
+          <code>/etc/systemd-sentry/policy.toml</code> and <code>policy.d/*.toml</code>. Protected units
+          (<code>systemd-journald</code>, <code>dbus</code>, <code>sshd</code>, <code>init.scope</code>)
+          are completely untouchable.</span>
+        </li>
+        <li>
+          <strong>Hard Memory Ceiling &amp; Self-Defense (&lt;15MB RSS).</strong>
+          <span>Engineered for low-spec VPS (512MB RAM) and IoT gateways. Automatically sheds inference
+          load and switches to deterministic exit-code/signal fallback triage under memory pressure.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">03</span>Local IPC &amp; Zero Network Listeners</h2>
+      <p>
+        Security starts with zero exposure. <code>systemd-sentry</code> opens <strong>zero TCP ports</strong>.
+        All communication occurs through authenticated local host channels:
+      </p>
+      <ul class="benefits">
+        <li>
+          <strong>UNIX Domain Socket with <code>SO_PEERCRED</code>.</strong>
+          <span>Local CLI queries communicate over <code>/run/systemd-sentry/sentry.sock</code>.
+          The kernel guarantees peer UID/GID credentials; mutating actions (e.g. <code>reset</code>)
+          require root authorization.</span>
+        </li>
+        <li>
+          <strong>System D-Bus Service.</strong>
+          <span>Registers <code>org.freedesktop.SystemdSentry</code> on the system bus for standard
+          systemd and desktop integration.</span>
+        </li>
+        <li>
+          <strong>Model Context Protocol (MCP) Server.</strong>
+          <span>Runs an MCP server over <code>stdio</code> (<code>systemd-sentry mcp</code>) for direct,
+          secure integration with Claude Desktop, Cursor, and agentic workflows without network exposure.</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2><span class="num">04</span>Engineering &amp; Testing Metrics</h2>
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="val">200 / 200</div>
+          <div class="lbl">Unit QA Tests Passed</div>
+        </div>
+        <div class="metric-card">
+          <div class="val">87 / 87</div>
+          <div class="lbl">4-Tier E2E Tests Passed</div>
+        </div>
+        <div class="metric-card">
+          <div class="val">4</div>
+          <div class="lbl">cargo-fuzz Targets</div>
+        </div>
+        <div class="metric-card">
+          <div class="val">0</div>
+          <div class="lbl">Dynamic C Libraries</div>
+        </div>
+        <div class="metric-card">
+          <div class="val">&le; 256</div>
+          <div class="lbl">Physical LOC / File</div>
+        </div>
+        <div class="metric-card">
+          <div class="val">&lt; 15 MB</div>
+          <div class="lbl">Target Memory RSS</div>
+        </div>
+      </div>
+      <p>
+        Every commit is verified against hard structural and security invariants:
+        <code>scripts/check_deps.sh</code> enforces zero dynamic C linkage;
+        <code>scripts/check_loc.sh</code> enforces single-function isolation and &le;256 LOC per file;
+        and the entire test suite runs with zero panics in daemon paths.
+      </p>
+    </section>
+
+    <section>
+      <h2><span class="num">05</span>Quick Start &amp; CLI Surface</h2>
+      <p>Build from source with standard Rust toolchain:</p>
+<pre><code>git clone https://github.com/UberMetroid/systemd-sentry.git
+cd systemd-sentry
+cargo build --release</code></pre>
+
+      <p>Interactive setup wizard (detects local Ollama / llama.cpp / OpenAI endpoints):</p>
+<pre><code>systemd-sentry --setup</code></pre>
+
+      <p>Validate configuration and policy drop-in syntax (pre-flight check, exits <code>0</code> or <code>78</code>):</p>
+<pre><code>systemd-sentry check</code></pre>
+
+      <p>Inspect system health and active circuit breaker states:</p>
+<pre><code>systemd-sentry status --json</code></pre>
+
+      <p>On-demand root cause triage for any unit without waiting for failure:</p>
+<pre><code>systemd-sentry triage nginx.service</code></pre>
+
+      <p>Live streaming event monitor (crashes, circuit breaker trips, remediations):</p>
+<pre><code>systemd-sentry monitor</code></pre>
+
+      <p>Run the Model Context Protocol (MCP) server for external AI tools over stdio:</p>
+<pre><code>systemd-sentry mcp</code></pre>
+    </section>
+
+    <section>
+      <h2><span class="num">06</span>License</h2>
+      <p>
+        Licensed under either of <strong>Apache License, Version 2.0</strong> or
+        <strong>MIT license</strong> at your option. See <code>LICENSE</code> for details.
+      </p>
+    </section>
+
+    <footer class="site">
+      <div>
+        <a href="about.html">About &amp; Architecture</a> &middot;
+        <a href="https://github.com/UberMetroid/systemd-sentry">GitHub Repository</a> &middot;
+        <a href="https://github.com/UberMetroid/systemd-sentry/blob/main/docs/design_principles.md">Design Principles</a> &middot;
+        <a href="https://github.com/UberMetroid/systemd-sentry/blob/main/docs/ipc_api.md">IPC API Spec</a>
+      </div>
+      <div>systemd-sentry &copy; 2026 systemd-sentry contributors</div>
+    </footer>
+
+  </div>
+</body>
+</html>

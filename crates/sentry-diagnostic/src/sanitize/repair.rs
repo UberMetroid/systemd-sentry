@@ -80,15 +80,9 @@ pub fn repair_json(input: &str) -> String {
 }
 
 fn clean_trailing_comma(buf: &mut String) {
-    let mut trim_len = buf.len();
-    while trim_len > 0 {
-        let last_char = buf[..trim_len].chars().next_back().unwrap();
-        if last_char.is_whitespace() {
-            trim_len -= last_char.len_utf8();
-        } else if last_char == ',' {
-            trim_len -= 1;
-            buf.truncate(trim_len);
-            break;
+    while let Some(last_char) = buf.chars().next_back() {
+        if last_char.is_whitespace() || last_char == ',' {
+            buf.pop();
         } else {
             break;
         }
