@@ -67,7 +67,7 @@
 | HM2 | Unprivileged Container & Virtualized Host Fallback | R2: `crates/sentry-driver/src/psi/`, `crates/sentry-driver/src/cgroup/`, `crates/sentry-daemon/`, `qa/unit/src/psi/`, `qa/unit/src/cgroup/` | None | DONE |
 | HM3 | Adaptive LLM Inference Timeout & Fallback | R3: `crates/sentry-diagnostic/src/circuit/`, `crates/sentry-diagnostic/src/engine.rs`, `qa/unit/src/diagnostic/` | None | DONE |
 | HM4 | Multi-Socket Activation Disambiguation | R4: `crates/sentry-driver/src/activation/`, `crates/sentry-daemon/src/ipc/listener.rs`, `qa/unit/src/activation/` | None | DONE |
-| HM5 | Hardening Integration, Acceptance & Push | Full workspace & QA tests, check_loc.sh, check_deps.sh, RSS check, git commit & push origin main | HM1, HM2, HM3, HM4 | IN_PROGRESS |
+| HM5 | Hardening Integration, Acceptance & Push | Full workspace & QA tests, check_loc.sh, check_deps.sh, RSS check, git commit & push origin main | HM1, HM2, HM3, HM4 | DONE |
 
 ## Interface Contracts
 
