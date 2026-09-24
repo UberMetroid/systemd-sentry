@@ -1,0 +1,39 @@
+[Unit]
+Description=systemd-sentry Autonomous Supervisor
+Documentation=https://github.com/UberMetroid/systemd-sentry
+After=dbus.service systemd-journald.service
+Requires=dbus.service
+DefaultDependencies=no
+Before=sysinit.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+WatchdogSec=15s
+Restart=always
+RestartSec=3s
+
+# Socket activation
+Sockets=systemd-sentry.socket
+
+ExecStart=/usr/local/bin/systemd-sentry daemon --config /etc/systemd-sentry/config.toml
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Kernel Sandboxing & Privilege Dropping
+User=sentry
+Group=sentry
+SupplementaryGroups=systemd-journal
+CapabilityBoundingSet=CAP_DAC_READ_SEARCH CAP_KILL
+AmbientCapabilities=CAP_DAC_READ_SEARCH
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=false
+PrivateTmp=yes
+MemoryDenyWriteExecute=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/var/lib/systemd-sentry /var/log/systemd-sentry /run/systemd-sentry
+
+[Install]
+WantedBy=multi-user.target

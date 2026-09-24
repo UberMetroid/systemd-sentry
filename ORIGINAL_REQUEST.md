@@ -84,3 +84,21 @@ USER DESIGN DIRECTIVE:
 1. Unix Philosophy: Clean separation of mechanism and policy; composable standard streams (stdout/stderr/stdin); silence on success; standard exit codes; treat everything as a file/stream.
 2. Linus Torvalds Pragmatism: Zero unnecessary abstraction layers or bloat; fast, clean, deterministic code; respect Linux kernel interfaces (/proc, /sys, cgroups v2, PSI); NEVER panic in runtime daemon paths; fail safely.
 3. systemd Design Alignment: Support .d/ drop-in configuration directories (/etc/systemd-sentry/policy.d/*.toml); standard systemd exit codes; native D-Bus conventions; strict sandboxing. Ensure all upcoming milestones adhere to this.
+
+## Follow-up — 2026-09-24T01:06:01Z
+
+API / IPC CONTRACT FORMALIZED:
+1. Local UNIX Socket IPC: /run/systemd-sentry/sentry.sock with SO_PEERCRED kernel credential authorization (for local CLI queries).
+2. System D-Bus: org.freedesktop.SystemdSentry on system bus for systemd-idiomatic control.
+3. AI Agent Protocol: Model Context Protocol (MCP) via stdio (systemd-sentry mcp) for agentic and tool integrations.
+4. Zero Network Listeners: No TCP ports opened.
+All assets created in systemd/ and documented in docs/ipc_api.md. Please ensure Milestone 3 (MCP/Inference) and Milestone 4 (CLI) adhere to this.
+
+## Follow-up — 2026-09-24T01:05:58Z
+
+API / IPC CONTRACT FORMALIZED:
+1. Local UNIX Socket IPC: /run/systemd-sentry/sentry.sock with SO_PEERCRED kernel credential authorization (for local CLI queries).
+2. System D-Bus: org.freedesktop.SystemdSentry on system bus for systemd-idiomatic control.
+3. AI Agent Protocol: Model Context Protocol (MCP) via stdio (systemd-sentry mcp) for agentic and tool integrations.
+4. Zero Network Listeners: No TCP ports opened.
+All assets created in systemd/ and documented in docs/ipc_api.md. Please ensure Milestone 3 (MCP/Inference) and Milestone 4 (CLI) adhere to this.
