@@ -38,6 +38,7 @@ impl ActivatedSocket {
     /// Converts the activated socket into an asynchronous Tokio TCP listener.
     pub fn into_tokio_tcp_listener(self) -> io::Result<TokioTcpListener> {
         let std_listener = self.into_std_tcp_listener();
+        std_listener.set_nonblocking(true)?;
         TokioTcpListener::from_std(std_listener)
     }
 
@@ -52,6 +53,7 @@ impl ActivatedSocket {
     /// Converts the activated socket into an asynchronous Tokio Unix listener.
     pub fn into_tokio_unix_listener(self) -> io::Result<TokioUnixListener> {
         let std_listener = self.into_std_unix_listener();
+        std_listener.set_nonblocking(true)?;
         TokioUnixListener::from_std(std_listener)
     }
 }

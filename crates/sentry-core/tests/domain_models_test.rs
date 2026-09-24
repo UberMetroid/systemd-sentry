@@ -1,7 +1,5 @@
 use chrono::Utc;
 use sentry_core::models::*;
-use sentry_core::*;
-use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
 

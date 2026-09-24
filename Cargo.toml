@@ -45,6 +45,7 @@ ruzstd = { version = "0.7" }
 
 # Observability
 tracing = { version = "0.1" }
+futures-lite = { version = "2.0" }
 
 # Testing utilities
 tempfile = { version = "3.10" }

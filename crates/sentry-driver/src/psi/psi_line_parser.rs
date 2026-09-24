@@ -35,7 +35,7 @@ pub fn parse_psi_line(line: &str) -> Result<(&str, PsiLine), PsiError> {
         avg10: avg10.ok_or_else(|| PsiError::MissingField("avg10", trimmed.to_string()))?,
         avg60: avg60.ok_or_else(|| PsiError::MissingField("avg60", trimmed.to_string()))?,
         avg300: avg300.ok_or_else(|| PsiError::MissingField("avg300", trimmed.to_string()))?,
-        total: total.ok_or_else(|| PsiError::MissingField("total", trimmed.to_string()))?,
+        total_usec: total.ok_or_else(|| PsiError::MissingField("total", trimmed.to_string()))?,
     };
 
     Ok((kind, parsed_line))

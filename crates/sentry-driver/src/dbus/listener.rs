@@ -6,9 +6,10 @@ use super::manager_client::subscribe_manager;
 use super::match_rules::{build_manager_match_rule, build_unit_properties_match_rule};
 use super::path_unescape::object_path_to_unit_name;
 use super::property_decoder::{decode_unit_properties, extract_unit_failed_event};
+use futures_lite::stream::StreamExt;
 use std::collections::HashMap;
 use tokio::sync::mpsc;
-use tracing::{debug, error};
+use tracing::debug;
 use zbus::zvariant::OwnedValue;
 use zbus::{Connection, MessageStream};
 
@@ -27,9 +28,28 @@ impl SystemdDbusListener {
     /// Creates a listener over an existing D-Bus connection.
     pub async fn new(conn: Connection) -> Result<Self, DbusDriverError> {
         subscribe_manager(&conn).await?;
-        conn.add_match_rule(build_manager_match_rule()).await?;
-        conn.add_match_rule(build_unit_properties_match_rule())
-            .await?;
+
+        // Install D-Bus signal match rules via org.freedesktop.DBus.AddMatch
+        let manager_rule = build_manager_match_rule().to_string();
+        conn.call_method(
+            Some("org.freedesktop.DBus"),
+            "/org/freedesktop/DBus",
+            Some("org.freedesktop.DBus"),
+            "AddMatch",
+            &(manager_rule,),
+        )
+        .await?;
+
+        let properties_rule = build_unit_properties_match_rule().to_string();
+        conn.call_method(
+            Some("org.freedesktop.DBus"),
+            "/org/freedesktop/DBus",
+            Some("org.freedesktop.DBus"),
+            "AddMatch",
+            &(properties_rule,),
+        )
+        .await?;
+
         Ok(Self { conn })
     }
 
@@ -44,28 +64,23 @@ impl SystemdDbusListener {
         let mut stream = MessageStream::from(&self.conn);
 
         let handle = tokio::spawn(async move {
-            use futures_util::StreamExt;
             while let Some(msg_result) = stream.next().await {
                 let msg = match msg_result {
                     Ok(m) => m,
-                    Err(e) => {
-                        error!("D-Bus stream error: {e}");
-                        continue;
-                    }
+                    Err(_) => continue,
                 };
-
                 let header = msg.header();
                 let member = match header.member() {
-                    Some(m) => m.as_str(),
+                    Some(m) => m.as_str().to_string(),
                     None => continue,
                 };
                 let iface = match header.interface() {
-                    Some(i) => i.as_str(),
+                    Some(i) => i.as_str().to_string(),
                     None => continue,
                 };
 
                 if iface == "org.freedesktop.systemd1.Manager" {
-                    Self::handle_manager_signal(member, &msg, &tx).await;
+                    Self::handle_manager_signal(&member, &msg, &tx).await;
                 } else if iface == "org.freedesktop.DBus.Properties" && member == "PropertiesChanged"
                 {
                     Self::handle_properties_signal(&msg, &tx).await;
@@ -114,7 +129,8 @@ impl SystemdDbusListener {
     }
 
     async fn handle_properties_signal(msg: &zbus::Message, tx: &mpsc::Sender<DbusEvent>) {
-        let path = match msg.header().path() {
+        let header = msg.header();
+        let path = match header.path() {
             Some(p) => p.as_str(),
             None => return,
         };

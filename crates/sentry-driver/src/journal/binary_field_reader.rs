@@ -1,7 +1,7 @@
 //! Reads 64-bit LE length-prefixed binary fields from Journal Export stream.
 
 use sentry_core::error::JournalError;
-use std::io::{self, BufRead, Read};
+use std::io::{self, BufRead};
 
 /// Maximum permissible size for a single journal binary field (16 MiB).
 pub const MAX_FIELD_SIZE: usize = 16 * 1024 * 1024;

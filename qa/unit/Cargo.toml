@@ -1,0 +1,18 @@
+[package]
+name = "sentry-qa-unit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "1:1 Unit QA test suite for systemd-sentry"
+
+[dependencies]
+sentry-core.workspace = true
+sentry-driver.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
+tempfile.workspace = true
+rustix.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+zbus.workspace = true
