@@ -122,20 +122,32 @@ allow_restart = false     # Never auto-restart databases without human approval
 
 ## CLI & Operator Tooling
 
-Inspect system health, review post-mortems, and manage circuit breakers:
+Inspect system health, review post-mortems, stream real-time events, and manage circuit breakers:
 
 ```bash
-# Check daemon status and supervised units
+# Check daemon status and supervised units (--json supported)
 systemd-sentry status
+
+# Pre-flight syntax validation of config.toml and policy.d/*.toml (nginx -t style)
+systemd-sentry check
+
+# Stream real-time failure events, triage reports, and circuit breaker state
+systemd-sentry monitor
+
+# Run immediate on-demand AI triage on a live or degraded service
+systemd-sentry triage nginx.service --since "10 min ago"
 
 # List recent incident post-mortems
 systemd-sentry incidents
 
-# View full triage report for an incident
+# View full forensic triage report for a specific incident
 systemd-sentry inspect inc-20260923-01
 
 # Manually reset a tripped circuit breaker
 systemd-sentry reset nginx.service
+
+# Generate shell completions (bash, zsh, fish)
+source <(systemd-sentry completions bash)
 ```
 
 ---

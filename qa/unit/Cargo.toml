@@ -10,9 +10,15 @@ description = "1:1 Unit QA test suite for systemd-sentry"
 [dependencies]
 sentry-core.workspace = true
 sentry-driver.workspace = true
-tokio = { workspace = true, features = ["test-util"] }
+sentry-diagnostic.workspace = true
+sentry-mcp.workspace = true
+async-trait.workspace = true
+tokio = { workspace = true, features = ["test-util", "io-util"] }
 tempfile.workspace = true
 rustix.workspace = true
 chrono.workspace = true
 uuid.workspace = true
 zbus.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+reqwest.workspace = true

@@ -93,3 +93,25 @@ API / IPC CONTRACT FORMALIZED:
 3. AI Agent Protocol: Model Context Protocol (MCP) via stdio (systemd-sentry mcp) for agentic and tool integrations.
 4. Zero Network Listeners: No TCP ports opened.
 All assets created in systemd/ and documented in docs/ipc_api.md. Please ensure Milestone 3 (MCP/Inference) and Milestone 4 (CLI) adhere to this.
+
+## Follow-up — 2026-09-24T01:16:15Z
+
+CLI SUITE EXPANSION APPROVED:
+Please incorporate the following 4 standard commands into the Milestone 4 (CLI & Operator Experience) specification and tests:
+1. `systemd-sentry check`: Pre-flight syntax validation of config.toml and policy.d/*.toml drop-ins (nginx -t / systemd-analyze verify style, exit 0 or 78).
+2. `systemd-sentry triage <unit>`: On-demand immediate AI triage of a running/degraded unit without waiting for failure.
+3. `systemd-sentry monitor`: Live streaming event feed of crashes, trips, and triage events over UNIX socket / D-Bus signals.
+4. `systemd-sentry completions <shell>`: Generates shell completion script (bash/zsh/fish) to stdout.
+Updated docs/ipc_api.md and README.md accordingly.
+
+## Follow-up — 2026-09-24T01:26:20Z
+
+CRITICAL SYSTEMS AUDIT FINDINGS (from Opinionated Systems Engineer):
+The auditor has identified key memory & syscall bottlenecks that must be remediated for low-spec hosts (512MB RAM VPS, <15MB RSS budget):
+1. Bounded McpState: Replace unbounded Vec<DiagnosticPayload> in crates/sentry-mcp/src/storage/mcp_state.rs with a bounded VecDeque capped at MAX_STORED_INCIDENTS = 100 (evicting oldest) to prevent OOM kills during crash storms.
+2. Clamp Journal Binary Field: Reduce MAX_FIELD_SIZE in crates/sentry-driver/src/journal/binary_field_reader.rs from 16 MiB down to 4 MiB (conforming to the low-memory budget).
+3. Zero-Allocation D-Bus Signal Dispatch: In crates/sentry-driver/src/dbus/listener.rs:73-80, eliminate redundant String allocations; compare borrowed &str slices directly (m.as_str(), i.as_str()).
+4. Persistent Watchdog Socket: In sentry-driver/src/notify, avoid opening/closing a UnixDatagram socket on every tick (eliminates 3 syscalls per tick).
+5. Fixed-Buffer Procfs/Sysfs Reads: In psi_reader.rs and memory_reader.rs, read into a stack buffer [u8; 512] instead of fs::read_to_string (which reallocates because sysfs files report size 0).
+6. Fix compilation in qa/unit: Create missing qa/unit/src/mcp/mod.rs and fix async trait / clone in test_engine.rs.
+Please prioritize these fixes across Milestone 2 and Milestone 3.

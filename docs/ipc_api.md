@@ -30,6 +30,12 @@ Sentry registers a well-known service on the Linux system bus:
   * `ListIncidents() -> a(ssss)`: Returns array of recent incidents.
   * `InspectIncident(s: incident_id) -> s`: Returns full Markdown post-mortem.
   * `ResetCircuit(s: unit_name) -> b`: Resets a tripped circuit breaker.
+  * `TriageUnit(s: unit_name, s: timespan) -> s`: Runs on-demand diagnostic triage on a service.
+* **Signals & Event Streams**:
+  * `UnitFailed(s: unit_name, i: exit_code, s: reason)`
+  * `CircuitTripped(s: unit_name, u: duration_secs)`
+  * `TriageCompleted(s: incident_id, s: unit_name, s: root_cause)`
+  * (These feed the real-time `systemd-sentry monitor` command).
 * **Security Policy (`/usr/share/dbus-1/system.d/org.freedesktop.SystemdSentry.conf`)**:
   * Root/sentry user can claim the bus name.
   * Local users can query status.

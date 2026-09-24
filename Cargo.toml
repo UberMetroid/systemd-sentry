@@ -3,6 +3,8 @@ resolver = "2"
 members = [
     "crates/sentry-core",
     "crates/sentry-driver",
+    "crates/sentry-diagnostic",
+    "crates/sentry-mcp",
     "qa/unit",
 ]
 
@@ -17,12 +19,18 @@ authors = ["systemd-sentry contributors"]
 # Internal workspace crates
 sentry-core = { path = "crates/sentry-core" }
 sentry-driver = { path = "crates/sentry-driver" }
+sentry-diagnostic = { path = "crates/sentry-diagnostic" }
+sentry-mcp = { path = "crates/sentry-mcp" }
+
+# HTTP client & async traits (pure Rust TLS, zero libssl/libcrypto)
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+async-trait = "0.1"
 
 # Pure Rust D-Bus (zero libdbus-1.so)
 zbus = { version = "5.19", default-features = false, features = ["tokio"] }
 
 # Pure Rust async runtime & system interfaces
-tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "net", "fs", "io-util", "signal", "time", "process"] }
+tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "net", "fs", "io-util", "io-std", "signal", "time", "process"] }
 rustix = { version = "0.38", features = ["fs", "net", "process", "event"] }
 
 # Pure Rust serialization

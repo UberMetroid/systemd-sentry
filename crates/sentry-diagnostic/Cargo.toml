@@ -1,0 +1,24 @@
+[package]
+name = "sentry-diagnostic"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "Diagnostic engine, LLM providers, and fallback triage for systemd-sentry"
+
+[dependencies]
+sentry-core.workspace = true
+reqwest.workspace = true
+async-trait.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["test-util"] }

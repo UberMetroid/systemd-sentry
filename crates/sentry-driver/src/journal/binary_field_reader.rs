@@ -3,8 +3,8 @@
 use sentry_core::error::JournalError;
 use std::io::{self, BufRead};
 
-/// Maximum permissible size for a single journal binary field (16 MiB).
-pub const MAX_FIELD_SIZE: usize = 16 * 1024 * 1024;
+/// Maximum permissible size for a single journal binary field (4 MiB).
+pub const MAX_FIELD_SIZE: usize = 4 * 1024 * 1024;
 
 /// Reads a 64-bit little-endian length-prefixed binary field from the buffer.
 ///

@@ -16,3 +16,7 @@ pub mod logind;
 pub mod notify;
 #[cfg(test)]
 pub mod psi;
+#[cfg(test)]
+pub mod diagnostic;
+#[cfg(test)]
+pub mod mcp;
