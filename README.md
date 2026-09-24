@@ -1,4 +1,4 @@
-# systemd-sentry (`syntry`)
+# systemd-sentry
 
 > **Autonomous, zero-trust systemd supervisor in pure Rust.**  
 > Intercepts crashes at the D-Bus and kernel layer, slices causal logs, provides instant root-cause analysis via local or cloud AI, and enforces deterministic circuit-breaking to halt flapping.

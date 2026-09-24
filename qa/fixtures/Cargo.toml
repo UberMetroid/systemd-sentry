@@ -1,0 +1,19 @@
+[package]
+name = "sentry-fixtures"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+
+[[bin]]
+name = "segfault_service"
+path = "segfault_service/main.rs"
+
+[[bin]]
+name = "oom_service"
+path = "oom_service/main.rs"
+
+[[bin]]
+name = "flapper_service"
+path = "flapper_service/main.rs"

@@ -2,7 +2,7 @@
 
 ## Initial Request — 2026-09-24T00:16:09Z
 
-Build **systemd-sentry** (`syntry`), an autonomous, zero-trust system supervisor written in 100% pure Rust that brings intelligent root-cause triage, deterministic circuit-breaking, and guarded self-healing to `systemd`-managed Linux environments.
+Build **systemd-sentry**, an autonomous, zero-trust system supervisor written in 100% pure Rust that brings intelligent root-cause triage, deterministic circuit-breaking, and guarded self-healing to `systemd`-managed Linux environments.
 
 Working directory: `/home/jeryd/Projects/UberMetroid/systemd-sentry`
 Integrity mode: development
@@ -73,3 +73,7 @@ Integrity mode: development
 - [ ] `install/install.sh --dry-run` or validation passes syntax and permission checks.
 - [ ] Systemd service, socket, sysusers, tmpfiles, and D-Bus policy files pass `systemd-analyze verify`.
 - [ ] CLI `--setup` correctly validates local and OpenAI-compatible configuration.
+
+## Follow-up — 2026-09-24T00:34:33Z
+
+USER DIRECTIVE: Please do NOT use the name 'syntry' anywhere in the project. Do not use 'syntry' for binaries, symlinks, CLI commands, comments, documentation, logs, or test strings. The project and CLI name is strictly 'sentry' (or 'systemd-sentry'). Please ensure all current and future milestones adhere to this naming.

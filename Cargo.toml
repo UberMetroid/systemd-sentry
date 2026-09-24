@@ -1,0 +1,50 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sentry-core",
+    "crates/sentry-driver",
+    "qa/unit",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "Apache-2.0 OR MIT"
+authors = ["systemd-sentry contributors"]
+
+[workspace.dependencies]
+# Internal workspace crates
+sentry-core = { path = "crates/sentry-core" }
+sentry-driver = { path = "crates/sentry-driver" }
+
+# Pure Rust D-Bus (zero libdbus-1.so)
+zbus = { version = "5.19", default-features = false, features = ["tokio"] }
+
+# Pure Rust async runtime & system interfaces
+tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "net", "fs", "io-util", "signal", "time", "process"] }
+rustix = { version = "0.38", features = ["fs", "net", "process", "event"] }
+
+# Pure Rust serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0", features = ["std"] }
+
+# Error handling
+thiserror = { version = "2.0" }
+
+# Time & ID primitives
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.10", features = ["v4", "serde"] }
+
+# Pure Rust TLS (zero OpenSSL / libssl.so / libcrypto.so)
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+
+# Pure Rust decompression (zero libzstd.so / liblz4.so)
+lz4_flex = { version = "0.11" }
+ruzstd = { version = "0.7" }
+
+# Observability
+tracing = { version = "0.1" }
+
+# Testing utilities
+tempfile = { version = "3.10" }

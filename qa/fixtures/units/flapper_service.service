@@ -1,0 +1,12 @@
+[Unit]
+Description=Simulated Rapid Flapper Service (QA Fixture)
+After=network.target
+
+[Service]
+Type=notify
+NotifyAccess=all
+ExecStart=/usr/local/bin/flapper_service --live-ms 30
+Restart=always
+RestartSec=50ms
+StandardOutput=journal
+StandardError=journal

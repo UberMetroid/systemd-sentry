@@ -1,0 +1,10 @@
+[Unit]
+Description=Simulated Segfault Crashing Service (QA Fixture)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/segfault_service --delay-ms 10
+Restart=no
+StandardOutput=journal
+StandardError=journal
