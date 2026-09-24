@@ -1,0 +1,26 @@
+# Rust build artifacts
+target/
+**/*.rs.bk
+*.bk
+
+# Local credentials & secrets
+*.cred
+*.token
+.env
+.env.*
+
+# Runtime sockets & logs
+*.sock
+*.log
+/run/
+/var/
+
+# IDE & OS files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Teamwork scratch / internal agent logs
+.agents/
