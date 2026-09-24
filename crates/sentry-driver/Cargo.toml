@@ -1,11 +1,11 @@
 [package]
-name = "syntropd-sentry-driver"
+name = "syntrop-sentry-driver"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
-publish = false
+repository.workspace = true
 description = "Pure Rust systemd drivers and host subsystem integrations for systemd-sentry"
 
 [lib]

@@ -1148,11 +1148,11 @@ dependencies = [
  "rustix 0.38.44",
  "serde",
  "serde_json",
- "syntropd-sentry-core",
- "syntropd-sentry-diagnostic",
- "syntropd-sentry-driver",
- "syntropd-sentry-mcp",
- "syntropd-sentry-safety",
+ "syntrop-sentry-core",
+ "syntrop-sentry-diagnostic",
+ "syntrop-sentry-driver",
+ "syntrop-sentry-mcp",
+ "syntrop-sentry-safety",
  "tempfile",
  "thiserror",
  "tokio",
@@ -1162,7 +1162,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "syntropd-sentry-core"
+name = "syntrop-sentry-core"
 version = "0.1.0"
 dependencies = [
  "chrono",
@@ -1174,7 +1174,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "syntropd-sentry-diagnostic"
+name = "syntrop-sentry-diagnostic"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -1182,7 +1182,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "syntropd-sentry-core",
+ "syntrop-sentry-core",
  "tempfile",
  "thiserror",
  "tokio",
@@ -1191,7 +1191,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "syntropd-sentry-driver"
+name = "syntrop-sentry-driver"
 version = "0.1.0"
 dependencies = [
  "chrono",
@@ -1201,7 +1201,7 @@ dependencies = [
  "ruzstd",
  "serde",
  "serde_json",
- "syntropd-sentry-core",
+ "syntrop-sentry-core",
  "tempfile",
  "thiserror",
  "tokio",
@@ -1211,18 +1211,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "syntropd-sentry-mcp"
+name = "syntrop-sentry-mcp"
 version = "0.1.0"
 dependencies = [
  "chrono",
  "serde",
  "serde_json",
- "syntropd-sentry-core",
+ "syntrop-sentry-core",
  "tempfile",
  "thiserror",
  "tokio",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "syntrop-sentry-safety"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "syntrop-sentry-core",
+ "tempfile",
+ "thiserror",
+ "toml",
+ "tracing",
 ]
 
 [[package]]
@@ -1236,30 +1250,16 @@ dependencies = [
  "serde",
  "serde_json",
  "syntrop-sentry",
- "syntropd-sentry-core",
- "syntropd-sentry-diagnostic",
- "syntropd-sentry-driver",
- "syntropd-sentry-mcp",
- "syntropd-sentry-safety",
+ "syntrop-sentry-core",
+ "syntrop-sentry-diagnostic",
+ "syntrop-sentry-driver",
+ "syntrop-sentry-mcp",
+ "syntrop-sentry-safety",
  "tempfile",
  "tokio",
  "toml",
  "uuid",
  "zbus",
-]
-
-[[package]]
-name = "syntropd-sentry-safety"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "syntropd-sentry-core",
- "tempfile",
- "thiserror",
- "toml",
- "tracing",
 ]
 
 [[package]]

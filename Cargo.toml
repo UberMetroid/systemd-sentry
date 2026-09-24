@@ -16,14 +16,15 @@ edition = "2021"
 rust-version = "1.80"
 license = "Apache-2.0 OR MIT"
 authors = ["systemd-sentry contributors"]
+repository = "https://github.com/syntropd/sentry"
 
 [workspace.dependencies]
 # Internal workspace crates
-sentry-core = { package = "syntropd-sentry-core", version = "0.1.0", path = "crates/sentry-core" }
-sentry-driver = { package = "syntropd-sentry-driver", version = "0.1.0", path = "crates/sentry-driver" }
-sentry-diagnostic = { package = "syntropd-sentry-diagnostic", version = "0.1.0", path = "crates/sentry-diagnostic" }
-sentry-mcp = { package = "syntropd-sentry-mcp", version = "0.1.0", path = "crates/sentry-mcp" }
-sentry-safety = { package = "syntropd-sentry-safety", version = "0.1.0", path = "crates/sentry-safety" }
+sentry-core = { package = "syntrop-sentry-core", version = "0.1.0", path = "crates/sentry-core" }
+sentry-driver = { package = "syntrop-sentry-driver", version = "0.1.0", path = "crates/sentry-driver" }
+sentry-diagnostic = { package = "syntrop-sentry-diagnostic", version = "0.1.0", path = "crates/sentry-diagnostic" }
+sentry-mcp = { package = "syntrop-sentry-mcp", version = "0.1.0", path = "crates/sentry-mcp" }
+sentry-safety = { package = "syntrop-sentry-safety", version = "0.1.0", path = "crates/sentry-safety" }
 sentry-daemon = { package = "syntrop-sentry", version = "0.1.0", path = "crates/sentry-daemon" }
 
 # HTTP client & async traits (pure Rust TLS, zero libssl/libcrypto)
