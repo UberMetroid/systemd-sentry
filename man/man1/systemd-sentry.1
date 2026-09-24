@@ -1,0 +1,110 @@
+.TH SYSTEMD-SENTRY 1 "September 2026" "systemd-sentry 0.1.0" "User Commands"
+.SH NAME
+systemd-sentry, sentry \- autonomous zero-trust system supervisor and triage engine
+.SH SYNOPSIS
+.B systemd-sentry
+[\fIOPTIONS\fR] \fICOMMAND\fR [\fIARGS\fR...]
+.br
+.B sentry
+[\fIOPTIONS\fR] \fICOMMAND\fR [\fIARGS\fR...]
+.SH DESCRIPTION
+.B systemd-sentry
+is an autonomous, zero-trust system supervisor written in 100% pure Rust for
+.BR systemd (1)
+environments. It provides sliding-window circuit breaking, intelligent root-cause
+triage, flapping lockout protection, and guarded self-healing remediations.
+.PP
+The supervisor operates strictly under zero-trust principles: diagnostic engines
+and AI models have zero shell access, zero command execution capability, and are
+purely advisory. All automated actions must be explicitly whitelisted in
+declarative policy configurations.
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help
+Display command-line help and exit.
+.TP
+.BR \-V ", " \-\-version
+Display version information and exit.
+.TP
+.BR \-\-setup
+Launch interactive configuration wizard.
+.SH COMMANDS
+.TP
+.B daemon
+Run the background supervisor daemon. Reads configuration from
+\fI/etc/systemd-sentry/config.toml\fR and policy files from
+\fI/etc/systemd-sentry/policy.d/\fR.
+.TP
+.BR status " [\-\-json]"
+Query the health status of the daemon and all tracked systemd services.
+.TP
+.BR check " [\-\-verbose]"
+Validate configuration and policy drop-in files for syntax and semantic errors.
+Exits 0 on success, or 78 (EX_CONFIG) on failure.
+.TP
+.BR triage " \fIUNIT\fR [\-\-json]"
+Trigger immediate diagnostic root-cause analysis of a unit without waiting for
+a failure transition.
+.TP
+.B monitor
+Stream live failure events, circuit state transitions, and diagnostic reports
+in real-time over the UNIX domain socket.
+.TP
+.BR incidents " [\-\-limit \fIN\fR]"
+List recent diagnostic incident records (default limit: 20).
+.TP
+.BR inspect " \fIINCIDENT_ID\fR"
+Display detailed diagnostic root-cause report, evidence, and logs for an incident.
+.TP
+.BR reset " \fIUNIT\fR"
+Reset circuit breaker state, clear failure counters, and lift flapping lockouts
+for the specified service unit. Requires superuser privileges.
+.TP
+.B mcp
+Launch Model Context Protocol (MCP) server over standard input/output for AI
+agent tools and IDE integrations.
+.TP
+.BR completions " \fISHELL\fR"
+Generate shell completion script for \fIbash\fR, \fIzsh\fR, or \fIfish\fR.
+.SH EXIT STATUS
+.B systemd-sentry
+uses standard BSD/Unix sysexits:
+.TP
+.B 0
+Success (EX_OK).
+.TP
+.B 64
+Command-line usage error (EX_USAGE).
+.TP
+.B 69
+Required service or socket unavailable (EX_UNAVAILABLE).
+.TP
+.B 70
+Internal software error (EX_SOFTWARE).
+.TP
+.B 74
+Input/output error (EX_IOERR).
+.TP
+.B 77
+Permission denied (EX_NOPERM).
+.TP
+.B 78
+Configuration or policy validation error (EX_CONFIG).
+.SH FILES
+.TP
+.I /etc/systemd-sentry/config.toml
+Main daemon configuration file.
+.TP
+.I /etc/systemd-sentry/policy.toml
+Base system remediation policy.
+.TP
+.I /etc/systemd-sentry/policy.d/*.toml
+Drop-in policy override files merged in alphanumeric sort order.
+.TP
+.I /run/systemd-sentry/sentry.sock
+UNIX domain IPC socket for client commands and monitoring.
+.SH SEE ALSO
+.BR systemd-sentry.conf (5),
+.BR systemd-sentry.service (8),
+.BR systemctl (1),
+.BR journalctl (1)

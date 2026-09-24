@@ -83,43 +83,58 @@ Sentry separates global daemon settings from per-unit safety policies.
 ### Global Configuration (`/etc/systemd-sentry/config.toml`)
 ```toml
 [daemon]
-log_level = "info"
-listen_socket = "/run/systemd-sentry/sentry.sock"
-incident_dir = "/var/log/systemd-sentry/incidents"
-notify_desktop = true    # Emits desktop toasts via org.freedesktop.Notifications
-notify_wall = false       # Emits terminal alerts to active TTYs
+socket_path = "/run/systemd-sentry/sentry.sock"
+watchdog_sec = 15
+max_rss_bytes = 13631488    # 13 MiB limit before load shedding
 
-[inference]
-# Supported: "ollama", "llama_cpp", "openai_compatible"
-provider = "ollama"
+[provider]
+provider_type = "ollama"    # "ollama", "llamacpp", "openai", "fallback"
 endpoint = "http://127.0.0.1:11434"
-model = "qwen2.5-coder:7b"
-timeout_secs = 30
-temperature = 0.1
-# api_key = "..."         # Optional for OpenAI-compatible cloud services
-
-[mcp]
-enabled = true
-socket_path = "/run/systemd-sentry/mcp.sock"
+model = "llama3:8b"
+timeout_secs = 10
+# api_key = "..."           # When using systemd-creds, loaded automatically
 ```
 
 ### Safety Policy & Circuit Breakers (`/etc/systemd-sentry/policy.toml`)
 ```toml
-[defaults]
-max_restarts = 3          # Max allowed failures in window before tripping
-window_seconds = 300      # 5-minute sliding window
-cooldown_seconds = 600    # Lockout cooldown duration
-allow_restart = true      # Permit autonomous restart on transient errors
+[global]
+protected_units = [
+    "systemd-journald.service",
+    "systemd-logind.service",
+    "systemd-udevd.service",
+    "systemd-resolved.service",
+    "dbus.service",
+    "sshd.service",
+    "systemd-sentry.service"
+]
+allowed_actions = ["RestartWithBackoff", "Reload", "ResetFailed", "NotifyOnly"]
+rate_limit_per_minute = 10
+
+[circuit]
+max_failures = 3
+window_secs = 60
+cooldown_secs = 30          # Exponential backoff up to max_cooldown_secs
+max_cooldown_secs = 1800
+flap_threshold = 3          # Permanent lockout after 3 trips
+flap_window_secs = 900
 
 [units."nginx.service"]
-max_restarts = 5
-window_seconds = 180
-allow_restart = true
-
-[units."postgresql.service"]
-max_restarts = 1
-allow_restart = false     # Never auto-restart databases without human approval
+allowed_actions = ["Reload", "RestartWithBackoff"]
+max_failures = 5
+auto_remediate = true
 ```
+
+---
+
+## Documentation
+
+* 🏛️ [System Architecture](docs/architecture.md): Subsystems, dataflow, and zero-trust guarantees.
+* 🛡️ [Hardening & Systemd Integrations](docs/hardening.md): Kernel capabilities, `systemd-creds`, `systemd-oomd`, and `systemd-coredump`.
+* 📜 [Policy Reference Guide](docs/policy_reference.md): Drop-in `.d/` precedence, circuit state machines, and flap lockout.
+* 🧠 [Diagnostic Providers & Inference](docs/providers.md): Edge Ollama, llama.cpp, OpenAI-compatible APIs, and fallback heuristics.
+* 🔌 [Model Context Protocol (MCP)](docs/mcp.md): Stdio MCP server setup for Claude Desktop, Cursor, and agent runtimes.
+* 🔌 [Local IPC & API Specification](docs/ipc_api.md): UNIX socket RPC and `SO_PEERCRED` authorization.
+* 🐧 [Unix & Torvalds Design Principles](docs/design_principles.md): Mechanism vs. policy and resource thrift.
 
 ---
 

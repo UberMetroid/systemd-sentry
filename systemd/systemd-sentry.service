@@ -2,9 +2,7 @@
 Description=systemd-sentry Autonomous Supervisor
 Documentation=https://github.com/UberMetroid/systemd-sentry
 After=dbus.service systemd-journald.service
-Requires=dbus.service
-DefaultDependencies=no
-Before=sysinit.target
+Wants=dbus.service systemd-journald.service
 
 [Service]
 Type=notify

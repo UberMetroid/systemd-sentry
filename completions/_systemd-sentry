@@ -1,0 +1,35 @@
+#compdef systemd-sentry sentry
+
+_systemd_sentry() {
+    local -a commands
+    commands=(
+        'daemon:Run supervisor daemon'
+        'status:Query runtime status and circuit states'
+        'check:Validate configuration and drop-in policies'
+        'triage:On-demand root-cause triage of a systemd unit'
+        'monitor:Stream live crash and remediation events'
+        'incidents:List recent incident journal slices'
+        'inspect:Inspect detailed diagnostic for an incident ID'
+        'reset:Reset circuit breaker lockout for a unit'
+        'mcp:Run Model Context Protocol server on stdio'
+        'completions:Generate shell completion script'
+        'setup:Launch interactive configuration wizard'
+    )
+
+    _arguments -C \
+        '(-c --config)'{-c,--config}'[Path to config file]:config file:_files' \
+        '(-s --socket)'{-s,--socket}'[Path to socket]:socket file:_files' \
+        '--setup[Launch interactive setup wizard]' \
+        '(-h --help)'{-h,--help}'[Print help information]' \
+        '(-V --version)'{-V,--version}'[Print version information]' \
+        '1: :->command' \
+        '*:: :->args'
+
+    case $state in
+        command)
+            _describe -t commands 'systemd-sentry commands' commands
+            ;;
+    esac
+}
+
+_systemd_sentry "$@"

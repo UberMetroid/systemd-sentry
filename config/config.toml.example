@@ -1,0 +1,31 @@
+# /etc/systemd-sentry/config.toml
+# systemd-sentry Main Configuration File
+
+[daemon]
+# Path to the UNIX domain IPC socket for CLI control
+socket_path = "/run/systemd-sentry/sentry.sock"
+
+# systemd watchdog notification interval in seconds
+watchdog_sec = 15
+
+# Maximum Resident Set Size (RSS) memory limit in bytes before load shedding
+# Default: 13 MiB (13,631,488 bytes) to guarantee <15MB RSS footprint on low-spec VPS
+max_rss_bytes = 13631488
+
+[provider]
+# Diagnostic provider type: "ollama", "llamacpp", "openai", or "fallback"
+provider_type = "ollama"
+
+# Inference endpoint URL
+endpoint = "http://127.0.0.1:11434"
+
+# Model identifier
+model = "llama3:8b"
+
+# Optional API key. When running as a systemd service, prefer using systemd-creds:
+#   systemd-creds set /etc/credstore.encrypted/openai_api_key
+# The daemon will automatically detect $CREDENTIALS_DIRECTORY/openai_api_key.
+# api_key = ""
+
+# Request timeout in seconds
+timeout_secs = 10

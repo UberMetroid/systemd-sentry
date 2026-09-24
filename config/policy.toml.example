@@ -1,0 +1,50 @@
+# /etc/systemd-sentry/policy.toml
+# systemd-sentry Base Policy Configuration File
+
+[global]
+# Units that systemd-sentry is strictly forbidden from mutating or restarting
+protected_units = [
+    "systemd-journald.service",
+    "systemd-logind.service",
+    "systemd-udevd.service",
+    "systemd-resolved.service",
+    "dbus.service",
+    "sshd.service",
+    "ssh.service",
+    "init.scope",
+    "systemd-sentry.service"
+]
+
+# Globally authorized remediation actions
+allowed_actions = [
+    "RestartWithBackoff",
+    "Reload",
+    "ResetFailed",
+    "NotifyOnly"
+]
+
+# Rate limit for automated remediations per 60-second window across all units
+rate_limit_per_minute = 10
+
+# Require explicit confirmation before executing remediations
+require_confirmation = false
+
+[circuit]
+# Maximum failures permitted within sliding window before tripping circuit open
+max_failures = 3
+
+# Duration of sliding evaluation window in seconds
+window_secs = 60
+
+# Base cooldown duration in seconds before attempting half-open recovery
+# Subsequent trips back off exponentially: cooldown = cooldown_secs * 2^(trips-1)
+cooldown_secs = 30
+
+# Maximum exponential cooldown cap in seconds
+max_cooldown_secs = 1800
+
+# Number of circuit trips within flap_window_secs before permanent lockout
+flap_threshold = 3
+
+# Flapping detection observation window in seconds
+flap_window_secs = 900

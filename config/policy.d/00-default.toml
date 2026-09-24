@@ -1,0 +1,11 @@
+# /etc/systemd-sentry/policy.d/00-default.toml
+# Drop-in policy example for overriding per-unit behaviors
+
+[units."nginx.service"]
+allowed_actions = ["Reload", "RestartWithBackoff"]
+max_failures = 5
+auto_remediate = true
+
+[units."postgresql.service"]
+allowed_actions = ["NotifyOnly"]
+auto_remediate = false

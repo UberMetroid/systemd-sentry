@@ -1,0 +1,76 @@
+.TH SYSTEMD-SENTRY.SERVICE 8 "September 2026" "systemd-sentry 0.1.0" "System Administration"
+.SH NAME
+systemd-sentry.service, sentry.service, systemd-sentry.socket, sentry.socket \- systemd supervisor service and socket units
+.SH SYNOPSIS
+.B systemctl
+start systemd-sentry.service
+.br
+.B systemctl
+enable --now systemd-sentry.socket
+.br
+.B systemctl
+status sentry.service
+.SH DESCRIPTION
+.B systemd-sentry.service
+runs the background autonomous supervisor for systemd units.
+.PP
+The service operates under a heavily sandboxed environment with strict privilege
+separation and Linux kernel security features:
+.IP \(bu 2
+Runs as dedicated non-root system user \fIsentry\fR (provisioned via
+.BR sysusers.d (5)).
+.IP \(bu 2
+Member of \fIsystemd-journal\fR group for journal stream ingestion.
+.IP \(bu 2
+Drops all kernel capabilities except \fICAP_DAC_READ_SEARCH\fR (reading journal
+and cgroup structures) and \fICAP_KILL\fR (sending signals).
+.IP \(bu 2
+Strict read-only filesystem via \fIProtectSystem=strict\fR, isolating home
+directories with \fIProtectHome=yes\fR.
+.IP \(bu 2
+Only writable directories are \fI/run/systemd-sentry\fR,
+\fI/var/log/systemd-sentry\fR, and \fI/var/lib/systemd-sentry\fR (provisioned
+via
+.BR tmpfiles.d (5)).
+.IP \(bu 2
+Memory execution protection via \fIMemoryDenyWriteExecute=yes\fR.
+.SH SOCKET ACTIVATION
+.B systemd-sentry.socket
+listens on \fI/run/systemd-sentry/sentry.sock\fR. When systemd activates the
+service, the listening file descriptor is passed to the process at descriptor 3
+using the standard \fI$LISTEN_FDS\fR protocol.
+.SH WATCHDOG
+The service integrates with systemd's software watchdog mechanism. The daemon
+periodically emits \fIWATCHDOG=1\fR state datagrams to \fI$NOTIFY_SOCKET\fR at
+half the configured \fIWatchdogSec\fR interval (every 7.5 seconds when
+\fIWatchdogSec=15s\fR).
+.PP
+If the supervisor process deadlocks, hangs, or fails to service the watchdog,
+systemd will automatically kill and restart the service according to
+\fIRestart=always\fR.
+.SH INTEGRATIONS
+.TP
+.B systemd-coredump
+The supervisor monitors crash signals (\fISIGSEGV\fR, \fISIGABRT\fR). When a
+coredump is generated, the supervisor parses extended attributes
+(\fIuser.coredump.*\fR) on files in \fI/var/lib/systemd/coredump/\fR without
+reading the entire binary core into RAM.
+.TP
+.B systemd-oomd
+Under high memory pressure, out-of-memory kills initiated by \fIsystemd-oomd\fR
+or the kernel OOM killer are detected via D-Bus failure reasons
+(\fIResult=oom-kill\fR) and cgroup v2 \fImemory.events\fR counters.
+.TP
+.B systemd-creds
+API keys and authentication secrets can be securely provisioned to the service
+using
+.BR systemd-creds (1)
+encrypted against the TPM2 chip or host credentials. The daemon automatically
+discovers secrets mounted into \fI$CREDENTIALS_DIRECTORY\fR.
+.SH SEE ALSO
+.BR systemd-sentry (1),
+.BR systemd-sentry.conf (5),
+.BR systemd.service (5),
+.BR systemd.socket (5),
+.BR systemd-creds (1),
+.BR systemd-oomd.service (8)

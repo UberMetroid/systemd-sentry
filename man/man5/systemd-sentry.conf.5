@@ -1,0 +1,119 @@
+.TH SYSTEMD-SENTRY.CONF 5 "September 2026" "systemd-sentry 0.1.0" "File Formats"
+.SH NAME
+systemd-sentry.conf, policy.toml \- configuration and policy format for systemd-sentry
+.SH SYNOPSIS
+.I /etc/systemd-sentry/config.toml
+.br
+.I /etc/systemd-sentry/policy.toml
+.br
+.I /etc/systemd-sentry/policy.d/*.toml
+.SH DESCRIPTION
+.B systemd-sentry
+reads its primary operational configuration from
+\fI/etc/systemd-sentry/config.toml\fR and its safety and remediation policy from
+\fI/etc/systemd-sentry/policy.toml\fR.
+.PP
+Following systemd conventions, drop-in policy extensions may be placed in
+\fI/etc/systemd-sentry/policy.d/*.toml\fR. Drop-ins are parsed in lexicographical
+sort order; individual unit policy declarations override global defaults.
+.SH CONFIG.TOML SECTIONS
+.TP
+.B [daemon]
+General daemon operational parameters:
+.RS
+.TP
+.BI socket_path= "PATH"
+Path to the UNIX domain IPC socket (default: \fI/run/systemd-sentry/sentry.sock\fR).
+.TP
+.BI watchdog_sec= "SECONDS"
+Watchdog notification interval (default: 15).
+.TP
+.BI max_rss_bytes= "BYTES"
+Resident Set Size memory limit before load shedding (default: 13631488, 13 MiB).
+.RE
+.TP
+.B [provider]
+AI diagnostic provider configuration:
+.RS
+.TP
+.BI provider_type= "TYPE"
+Diagnostic engine: \fI"ollama"\fR, \fI"llamacpp"\fR, \fI"openai"\fR, or \fI"fallback"\fR.
+.TP
+.BI endpoint= "URL"
+HTTP endpoint for the inference provider.
+.TP
+.BI model= "NAME"
+Model name (e.g. \fI"llama3:8b"\fR or \fI"gpt-4o-mini"\fR).
+.TP
+.BI api_key= "KEY"
+Authentication token. When running under systemd with credentials, the key is
+automatically read from \fI$CREDENTIALS_DIRECTORY/openai_api_key\fR or
+\fI$CREDENTIALS_DIRECTORY/api_key\fR without plaintext storage on disk.
+.RE
+.SH POLICY.TOML SECTIONS
+.TP
+.B [global]
+Defines baseline safety rules across all supervised units:
+.RS
+.TP
+.B protected_units
+List of unit names that the supervisor is strictly forbidden from restarting or
+mutating. Default protected units include:
+.IR systemd-journald.service ,
+.IR systemd-logind.service ,
+.IR systemd-udevd.service ,
+.IR systemd-resolved.service ,
+.IR dbus.service ,
+.IR sshd.service ,
+.IR ssh.service ,
+.IR init.scope ,
+and
+.IR systemd-sentry.service .
+.TP
+.B allowed_actions
+Set of permissible remediation actions: \fI"RestartWithBackoff"\fR, \fI"Reload"\fR,
+\fI"ResetFailed"\fR, or \fI"NotifyOnly"\fR.
+.RE
+.TP
+.B [circuit]
+Sliding-window circuit breaker tuning:
+.RS
+.TP
+.BI max_failures= "N"
+Maximum failures tolerated in the sliding window before tripping (default: 3).
+.TP
+.BI window_secs= "SECONDS"
+Duration of the failure evaluation sliding window (default: 60).
+.TP
+.BI cooldown_secs= "SECONDS"
+Base cooldown duration before transitioning to half-open state (default: 30).
+Trips back off exponentially up to \fImax_cooldown_secs\fR (default: 1800).
+.TP
+.BI flap_threshold= "N"
+Number of circuit trips within the flap window before locking out permanently (default: 3).
+.TP
+.BI flap_window_secs= "SECONDS"
+Window duration for flap detection (default: 900).
+.RE
+.TP
+.BI [units. UNIT_NAME ]
+Per-unit configuration overrides:
+.RS
+.TP
+.BI allowed_actions= "[...]"
+Explicitly permitted actions for this specific unit.
+.TP
+.BI max_failures= "N"
+Unit-specific failure threshold.
+.TP
+.BI auto_remediate= "BOOLEAN"
+Enable or disable automated remediation for this service.
+.RE
+.SH SECURITY
+File sizes for policy configurations are strictly bounded to at most 64 KiB to
+prevent denial-of-service or memory bloat. Malformed drop-in files are safely
+logged and skipped without crashing the daemon.
+.SH SEE ALSO
+.BR systemd-sentry (1),
+.BR systemd-sentry.service (8),
+.BR systemd-creds (1)
