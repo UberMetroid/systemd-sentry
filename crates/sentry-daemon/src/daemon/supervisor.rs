@@ -23,16 +23,15 @@ pub async fn run_supervisor(config: DaemonConfig) -> Result<(), Box<dyn std::err
     let dropin_dir = std::path::Path::new(&config.policy_dropin_dir);
     let policy_config = load_policy_with_dropins(base_path, dropin_dir);
     let gatekeeper = PolicyGatekeeper::new(policy_config);
-    let remediation_executor = RemediationExecutor::new(gatekeeper.clone());
 
     // 2. Initialize in-memory daemon state
-    let state = Arc::new(Mutex::new(DaemonState::new(config.clone(), gatekeeper)));
+    let state = Arc::new(Mutex::new(DaemonState::new(config.clone(), gatekeeper.clone())));
 
     // 3. Bind or adopt UNIX domain socket
     let ipc_listener = bind_or_activate_socket(&config.socket_path)?;
     info!("IPC server listening on {}", config.socket_path);
 
-    // 4. Initialize D-Bus listener
+    // 4. Initialize D-Bus listener and shared remediation executor
     let dbus_listener = match SystemdDbusListener::connect_system().await {
         Ok(l) => l,
         Err(e) => {
@@ -40,7 +39,9 @@ pub async fn run_supervisor(config: DaemonConfig) -> Result<(), Box<dyn std::err
             return Err(e.into());
         }
     };
+    let dbus_conn = dbus_listener.connection().clone();
     let (_dbus_task, dbus_rx) = dbus_listener.spawn_event_stream();
+    let remediation_executor = RemediationExecutor::with_connection(gatekeeper, dbus_conn);
 
     // 5. Initialize signal listeners for SIGHUP, SIGTERM, SIGINT
     let signal_listener = SignalListener::new()?;

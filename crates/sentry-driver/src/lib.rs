@@ -29,9 +29,10 @@ pub use cgroup::{
 };
 pub use coredump::{extract_backtrace, find_latest_coredump, match_coredump_record, read_coredump_xattrs};
 pub use dbus::{
-    decode_unit_properties, escape_unit_name, extract_unit_failed_event,
-    object_path_to_unit_name, unescape_unit_name, unit_name_to_object_path, DbusDriverError,
-    DbusEvent, SystemdDbusListener, UnitFailedEvent, UnitStateUpdate,
+    call_systemd_unit_method, decode_unit_properties, escape_unit_name, extract_unit_failed_event,
+    get_service_properties, get_unit_properties, object_path_to_unit_name, unescape_unit_name,
+    unit_name_to_object_path, DbusDriverError, DbusEvent, SystemdDbusListener, UnitFailedEvent,
+    UnitStateUpdate,
 };
 pub use journal::{
     read_binary_field, resync_journal_stream, JournalExportEntry, JournalExportParser,

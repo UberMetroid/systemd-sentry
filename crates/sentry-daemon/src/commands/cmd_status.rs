@@ -31,6 +31,10 @@ pub async fn execute_status(socket_path: &str, json: bool) -> i32 {
             eprintln!("Daemon returned error (code {}): {}", code, message);
             code
         }
+        Err(e) => {
+            eprintln!("Error communicating with daemon: {}", e);
+            EX_UNAVAILABLE
+        }
         _ => EX_UNAVAILABLE,
     }
 }

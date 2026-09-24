@@ -12,7 +12,9 @@ pub mod property_decoder;
 pub use error::DbusDriverError;
 pub use event::{DbusEvent, UnitFailedEvent, UnitStateUpdate};
 pub use listener::SystemdDbusListener;
-pub use manager_client::{call_systemd_unit_method, subscribe_manager};
+pub use manager_client::{
+    call_systemd_unit_method, get_service_properties, get_unit_properties, subscribe_manager,
+};
 pub use match_rules::{build_manager_match_rule, build_unit_properties_match_rule};
 pub use path_escape::{escape_unit_name, unit_name_to_object_path};
 pub use path_unescape::{object_path_to_unit_name, unescape_unit_name};

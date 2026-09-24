@@ -26,5 +26,6 @@ pub fn read_coredump_xattrs(path: &Path) -> Result<CoredumpXattrs, CoredumpError
         signal: read_attr("user.coredump.signal").and_then(|s| s.parse::<i32>().ok()),
         comm: read_attr("user.coredump.comm"),
         exe: read_attr("user.coredump.exe"),
+        unit: read_attr("user.coredump.unit"),
     })
 }

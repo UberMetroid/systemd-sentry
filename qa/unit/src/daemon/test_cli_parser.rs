@@ -106,3 +106,35 @@ fn test_subcommand_help_flags() {
         assert!(res_short.0.contains(sub), "Subcommand {} -h should contain subcommand name", sub);
     }
 }
+
+#[test]
+fn test_position_independent_flags_and_errors() {
+    // Flag after subcommand
+    let args1 = vec!["status".to_string(), "-s".to_string(), "/custom.sock".to_string()];
+    let parsed1 = parse_cli_args(&args1).unwrap();
+    assert_eq!(parsed1.command, Command::Status { json: false });
+    assert_eq!(parsed1.socket_path.as_deref(), Some("/custom.sock"));
+
+    // Config after subcommand
+    let args2 = vec!["check".to_string(), "-c".to_string(), "/custom.toml".to_string(), "-v".to_string()];
+    let parsed2 = parse_cli_args(&args2).unwrap();
+    assert_eq!(parsed2.command, Command::Check { verbose: true });
+    assert_eq!(parsed2.config_path.as_deref(), Some("/custom.toml"));
+
+    // Missing value on -s
+    let args3 = vec!["-s".to_string()];
+    let err3 = parse_cli_args(&args3).unwrap_err();
+    assert_eq!(err3.1, EX_USAGE);
+    assert!(err3.0.contains("requires a socket path"));
+
+    // Missing value on -c
+    let args4 = vec!["-c".to_string()];
+    let err4 = parse_cli_args(&args4).unwrap_err();
+    assert_eq!(err4.1, EX_USAGE);
+    assert!(err4.0.contains("requires a path"));
+
+    // Subcommand 'version'
+    let args5 = vec!["version".to_string()];
+    let parsed5 = parse_cli_args(&args5).unwrap();
+    assert_eq!(parsed5.command, Command::Version);
+}

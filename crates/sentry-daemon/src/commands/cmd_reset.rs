@@ -28,6 +28,10 @@ pub async fn execute_reset(socket_path: &str, unit: &str) -> i32 {
             eprintln!("Error resetting unit (code {}): {}", code, message);
             EX_SOFTWARE
         }
+        Err(e) => {
+            eprintln!("Error communicating with daemon: {}", e);
+            EX_UNAVAILABLE
+        }
         _ => EX_UNAVAILABLE,
     }
 }

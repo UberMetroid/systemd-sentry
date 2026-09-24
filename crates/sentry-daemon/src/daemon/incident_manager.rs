@@ -71,11 +71,11 @@ impl IncidentManager {
         };
 
         // 5. Update circuit breaker state and evaluate lockout
-        let (breaker_state_label, action_allowed) = {
+        let (breaker_state_label, action_allowed, gatekeeper) = {
             let mut s = state.lock().await;
             let breaker_state = s.circuit_registry.record_failure(&unit_name, std::time::Instant::now());
             let allowed = breaker_state.allows_remediation();
-            (breaker_state.label(), allowed)
+            (breaker_state.label(), allowed, s.policy_gatekeeper.clone())
         };
 
         info!(
@@ -85,7 +85,10 @@ impl IncidentManager {
 
         // 6. Execute remediation if circuit permits and action is active modification
         if action_allowed && diagnostic.proposed_remediation.action.is_active_modification() {
-            match remediation_executor.execute(&unit_name, &diagnostic.proposed_remediation).await {
+            match remediation_executor
+                .execute_with_gatekeeper(&unit_name, &diagnostic.proposed_remediation, &gatekeeper)
+                .await
+            {
                 Ok(msg) => info!("Remediation succeeded for {}: {}", unit_name, msg),
                 Err(err) => warn!("Remediation failed for {}: {}", unit_name, err),
             }

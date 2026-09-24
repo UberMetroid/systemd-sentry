@@ -24,4 +24,5 @@ fn test_read_coredump_xattrs_plain_file() {
     assert!(xattrs.signal.is_none());
     assert!(xattrs.comm.is_none());
     assert!(xattrs.exe.is_none());
+    assert!(xattrs.unit.is_none());
 }

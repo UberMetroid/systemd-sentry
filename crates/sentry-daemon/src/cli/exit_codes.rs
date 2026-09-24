@@ -8,6 +8,9 @@ pub const EX_OK: i32 = 0;
 /// The command was used incorrectly (e.g. invalid flag or argument count).
 pub const EX_USAGE: i32 = 64;
 
+/// The input data was incorrect in some way (e.g. incident not found).
+pub const EX_DATAERR: i32 = 65;
+
 /// A service or resource was unavailable (e.g. daemon not running).
 pub const EX_UNAVAILABLE: i32 = 69;
 

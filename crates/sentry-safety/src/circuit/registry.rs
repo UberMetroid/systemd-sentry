@@ -117,7 +117,7 @@ impl CircuitBreakerRegistry {
         let oldest_closed = self
             .breakers
             .iter()
-            .filter(|(_, b)| b.snapshot(now).state == "CLOSED")
+            .filter(|(_, b)| b.is_closed())
             .min_by_key(|(_, b)| b.last_activity())
             .map(|(k, _)| k.clone());
 

@@ -156,6 +156,16 @@ impl UnitBreaker {
         self.last_activity
     }
 
+    /// Returns current circuit state.
+    pub fn state(&self) -> &CircuitState {
+        &self.state
+    }
+
+    /// Returns true if the circuit is currently Closed.
+    pub fn is_closed(&self) -> bool {
+        self.state == CircuitState::Closed
+    }
+
     /// Returns whether this breaker is idle and safe to evict.
     pub fn is_idle(&self, now: Instant, ttl: Duration) -> bool {
         self.state == CircuitState::Closed

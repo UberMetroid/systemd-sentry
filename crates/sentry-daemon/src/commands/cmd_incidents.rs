@@ -1,6 +1,6 @@
 //! Command: List recent incidents recorded by the supervisor.
 
-use crate::cli::exit_codes::{EX_OK, EX_UNAVAILABLE};
+use crate::cli::exit_codes::{EX_OK, EX_SOFTWARE, EX_UNAVAILABLE};
 use crate::ipc::client::IpcClient;
 use crate::ipc::protocol::{IpcRequest, IpcResponse};
 
@@ -40,6 +40,14 @@ pub async fn execute_incidents(socket_path: &str, limit: usize, json: bool) -> i
                 }
             }
             EX_OK
+        }
+        Ok(IpcResponse::Error { code, message }) => {
+            eprintln!("Daemon returned error (code {}): {}", code, message);
+            EX_SOFTWARE
+        }
+        Err(e) => {
+            eprintln!("Error communicating with daemon: {}", e);
+            EX_UNAVAILABLE
         }
         _ => EX_UNAVAILABLE,
     }

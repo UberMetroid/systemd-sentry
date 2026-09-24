@@ -13,6 +13,8 @@ pub struct CoredumpXattrs {
     pub comm: Option<String>,
     /// Executable path.
     pub exe: Option<String>,
+    /// Unit name from systemd extended attributes (e.g. `user.coredump.unit`).
+    pub unit: Option<String>,
 }
 
 /// Crash event record parsed from journal or coredump storage.

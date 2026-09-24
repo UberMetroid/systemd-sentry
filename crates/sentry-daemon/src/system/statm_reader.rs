@@ -45,7 +45,7 @@ impl StatmReader {
     /// Respects the rate limit; returns cached value if called within `check_interval`.
     pub fn read_rss_bytes(&mut self) -> usize {
         let now = Instant::now();
-        if now.duration_since(self.last_check) < self.check_interval && self.cached_rss_bytes > 0 {
+        if now.saturating_duration_since(self.last_check) < self.check_interval && self.cached_rss_bytes > 0 {
             return self.cached_rss_bytes;
         }
 

@@ -11,6 +11,11 @@ fn test_ipc_request_serialization() {
     let json = serde_json::to_string(&req).unwrap();
     let deserialized: IpcRequest = serde_json::from_str(&json).unwrap();
     assert_eq!(req, deserialized);
+
+    let reload_req = IpcRequest::ReloadConfig;
+    let reload_json = serde_json::to_string(&reload_req).unwrap();
+    let reload_deser: IpcRequest = serde_json::from_str(&reload_json).unwrap();
+    assert_eq!(reload_req, reload_deser);
 }
 
 #[test]
@@ -133,4 +138,65 @@ fn test_inspect_and_incidents_diagnostic_payload_extraction() {
     assert_eq!(detail, "Killed by OOM killer due to memory exhaustion");
     let exit_code = val.get("evidence").unwrap().get("exit_code").and_then(|v| v.as_i64()).unwrap();
     assert_eq!(exit_code, 137);
+}
+
+#[tokio::test]
+async fn test_ipc_client_request_response_and_streaming() {
+    use sentry_daemon::ipc::client::IpcClient;
+    use sentry_daemon::ipc::protocol::{IpcRequest, IpcResponse};
+    use tempfile::tempdir;
+    use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+    use tokio::net::UnixListener;
+
+    let dir = tempdir().unwrap();
+    let sock_path = dir.path().join("test.sock");
+    let sock_str = sock_path.to_str().unwrap().to_string();
+
+    let listener = UnixListener::bind(&sock_path).unwrap();
+
+    let server_task = tokio::spawn(async move {
+        let (mut stream, _) = listener.accept().await.unwrap();
+        let (read_half, mut write_half) = stream.split();
+        let mut reader = tokio::io::BufReader::new(read_half);
+        let mut line = String::new();
+
+        // 1. Respond to Ping
+        reader.read_line(&mut line).await.unwrap();
+        let resp = serde_json::to_vec(&IpcResponse::Ok { data: serde_json::json!({"pong": true}) }).unwrap();
+        write_half.write_all(&resp).await.unwrap();
+        write_half.write_all(b"\n").await.unwrap();
+        line.clear();
+
+        // 2. Respond to Subscribe + immediately send Event in same write burst
+        reader.read_line(&mut line).await.unwrap();
+        let sub_resp = serde_json::to_vec(&IpcResponse::Ok { data: serde_json::json!({"subscribed": true}) }).unwrap();
+        let ev_resp = serde_json::to_vec(&IpcResponse::Event { data: serde_json::json!({"unit": "web.service"}) }).unwrap();
+        write_half.write_all(&sub_resp).await.unwrap();
+        write_half.write_all(b"\n").await.unwrap();
+        write_half.write_all(&ev_resp).await.unwrap();
+        write_half.write_all(b"\n").await.unwrap();
+    });
+
+    let mut client = IpcClient::connect(&sock_str).await.unwrap();
+
+    // 1. Send Ping
+    let res = client.send_request(&IpcRequest::Ping).await.unwrap();
+    assert!(matches!(res, IpcResponse::Ok { .. }));
+
+    // 2. Send SubscribeEvents and verify stream retains buffered events
+    let sub_res = client.send_request(&IpcRequest::SubscribeEvents).await.unwrap();
+    assert!(matches!(sub_res, IpcResponse::Ok { .. }));
+
+    let mut event_reader = client.into_reader();
+    let mut ev_line = String::new();
+    let n = event_reader.read_line(&mut ev_line).await.unwrap();
+    assert!(n > 0);
+    let parsed: IpcResponse = serde_json::from_str(&ev_line).unwrap();
+    if let IpcResponse::Event { data } = parsed {
+        assert_eq!(data.get("unit").and_then(|v| v.as_str()), Some("web.service"));
+    } else {
+        panic!("Expected IpcResponse::Event, got {:?}", parsed);
+    }
+
+    server_task.await.unwrap();
 }

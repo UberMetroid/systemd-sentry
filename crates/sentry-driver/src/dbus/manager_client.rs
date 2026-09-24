@@ -53,3 +53,44 @@ pub async fn call_systemd_unit_method(
         Ok(job_path.as_str().to_string())
     }
 }
+
+/// Retrieves all properties from `org.freedesktop.systemd1.Unit` interface for a unit.
+pub async fn get_unit_properties(
+    conn: &Connection,
+    unit: &str,
+) -> Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>, DbusDriverError> {
+    let path = super::path_escape::unit_name_to_object_path(unit)?;
+    let reply = conn
+        .call_method(
+            Some("org.freedesktop.systemd1"),
+            &path,
+            Some("org.freedesktop.DBus.Properties"),
+            "GetAll",
+            &("org.freedesktop.systemd1.Unit",),
+        )
+        .await?;
+    let props: std::collections::HashMap<String, zbus::zvariant::OwnedValue> =
+        reply.body().deserialize()?;
+    Ok(props)
+}
+
+/// Retrieves all properties from `org.freedesktop.systemd1.Service` interface for a unit.
+pub async fn get_service_properties(
+    conn: &Connection,
+    unit: &str,
+) -> Result<std::collections::HashMap<String, zbus::zvariant::OwnedValue>, DbusDriverError> {
+    let path = super::path_escape::unit_name_to_object_path(unit)?;
+    let reply = conn
+        .call_method(
+            Some("org.freedesktop.systemd1"),
+            &path,
+            Some("org.freedesktop.DBus.Properties"),
+            "GetAll",
+            &("org.freedesktop.systemd1.Service",),
+        )
+        .await?;
+    let props: std::collections::HashMap<String, zbus::zvariant::OwnedValue> =
+        reply.body().deserialize()?;
+    Ok(props)
+}
+

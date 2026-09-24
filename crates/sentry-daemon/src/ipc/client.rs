@@ -2,19 +2,24 @@
 
 use crate::ipc::protocol::{IpcRequest, IpcResponse, MAX_IPC_FRAME_SIZE};
 use std::io::{Error, ErrorKind};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
 /// Client connection handle to the supervisor daemon.
 pub struct IpcClient {
-    stream: UnixStream,
+    reader: BufReader<tokio::net::unix::OwnedReadHalf>,
+    writer: tokio::net::unix::OwnedWriteHalf,
 }
 
 impl IpcClient {
     /// Connect to the daemon's UNIX domain socket.
     pub async fn connect(socket_path: &str) -> Result<Self, Error> {
         let stream = UnixStream::connect(socket_path).await?;
-        Ok(Self { stream })
+        let (read_half, write_half) = stream.into_split();
+        Ok(Self {
+            reader: BufReader::new(read_half),
+            writer: write_half,
+        })
     }
 
     /// Send an IPC request and await the corresponding response.
@@ -24,14 +29,12 @@ impl IpcClient {
         })?;
         payload.push(b'\n');
 
-        self.stream.write_all(&payload).await?;
-        self.stream.flush().await?;
+        self.writer.write_all(&payload).await?;
+        self.writer.flush().await?;
 
-        let (reader, _) = self.stream.split();
-        let mut buf_reader = BufReader::new(reader);
         let mut line = String::new();
-
-        let bytes_read = buf_reader.read_line(&mut line).await?;
+        let mut handle = (&mut self.reader).take((MAX_IPC_FRAME_SIZE + 1) as u64);
+        let bytes_read = handle.read_line(&mut line).await?;
         if bytes_read == 0 {
             return Err(Error::new(ErrorKind::UnexpectedEof, "Daemon closed connection"));
         }
@@ -46,9 +49,8 @@ impl IpcClient {
         Ok(response)
     }
 
-    /// Split stream into reader for monitoring streaming events.
+    /// Split stream into reader for monitoring streaming events, retaining any buffered bytes.
     pub fn into_reader(self) -> BufReader<tokio::net::unix::OwnedReadHalf> {
-        let (reader, _) = self.stream.into_split();
-        BufReader::new(reader)
+        self.reader
     }
 }

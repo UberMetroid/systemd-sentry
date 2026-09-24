@@ -164,6 +164,13 @@ pub async fn handle_ipc_connection(
                 }).await;
             }
             IpcRequest::ReloadConfig => {
+                {
+                    let mut s = state.lock().await;
+                    let base = std::path::Path::new(&s.config.policy_path);
+                    let dropin = std::path::Path::new(&s.config.policy_dropin_dir);
+                    let policy = sentry_safety::policy::load_policy_with_dropins(base, dropin);
+                    s.policy_gatekeeper = sentry_safety::policy::PolicyGatekeeper::new(policy);
+                }
                 let _ = write_response(&mut write_half, &IpcResponse::Ok {
                     data: serde_json::json!({ "reloaded": true }),
                 }).await;
@@ -177,9 +184,20 @@ pub async fn handle_ipc_connection(
                     data: serde_json::json!({ "subscribed": true }),
                 }).await;
 
-                while let Ok(event) = rx.recv().await {
-                    if write_response(&mut write_half, &event).await.is_err() {
-                        break;
+                loop {
+                    match rx.recv().await {
+                        Ok(event) => {
+                            if write_response(&mut write_half, &event).await.is_err() {
+                                break;
+                            }
+                        }
+                        Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                            warn!("Event subscriber lagged, skipped {} event(s)", n);
+                            continue;
+                        }
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                            break;
+                        }
                     }
                 }
                 break;

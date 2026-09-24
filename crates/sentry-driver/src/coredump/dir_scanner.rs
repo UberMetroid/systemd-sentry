@@ -27,13 +27,18 @@ pub fn find_latest_coredump(coredump_dir: &Path, comm_match: Option<&str>) -> Op
         }
 
         if let Ok(xattrs) = read_coredump_xattrs(&path) {
-            let matched = match (comm_match, xattrs.comm.as_deref()) {
-                (Some(expected), Some(actual)) => {
+            let matched = match (comm_match, xattrs.unit.as_deref(), xattrs.comm.as_deref()) {
+                (Some(expected), Some(actual_unit), _) => {
                     let exp = expected.strip_suffix(".service").unwrap_or(expected);
-                    !actual.is_empty()
-                        && (actual == exp || exp.starts_with(actual) || actual.starts_with(exp))
+                    let act = actual_unit.strip_suffix(".service").unwrap_or(actual_unit);
+                    act == exp
                 }
-                (None, _) => true,
+                (Some(expected), None, Some(actual_comm)) => {
+                    let exp = expected.strip_suffix(".service").unwrap_or(expected);
+                    !actual_comm.is_empty()
+                        && (actual_comm == exp || exp.starts_with(actual_comm) || actual_comm.starts_with(exp))
+                }
+                (None, _, _) => true,
                 _ => false,
             };
 
@@ -47,7 +52,10 @@ pub fn find_latest_coredump(coredump_dir: &Path, comm_match: Option<&str>) -> Op
                     .unwrap_or(0);
 
                 let record = CoredumpRecord {
-                    unit: String::new(),
+                    unit: xattrs
+                        .unit
+                        .or_else(|| comm_match.map(|s| s.to_string()))
+                        .unwrap_or_default(),
                     pid: xattrs.pid.unwrap_or(0),
                     signal: xattrs.signal.unwrap_or(0),
                     signal_name: xattrs

@@ -25,3 +25,12 @@ fn test_strip_markdown_with_leading_and_trailing_spaces() {
     let input = "   ```json\n{\"test\": 1}\n```   ";
     assert_eq!(strip_markdown_fences(input), "{\"test\": 1}");
 }
+
+#[test]
+fn test_strip_markdown_conversational_preface_and_postscript() {
+    let input = "Here is the diagnosis you requested for unit {service}:\n```json\n{\"incident_id\": \"456\", \"status\": \"ok\"}\n```\nHope this helps!";
+    assert_eq!(
+        strip_markdown_fences(input),
+        "{\"incident_id\": \"456\", \"status\": \"ok\"}"
+    );
+}

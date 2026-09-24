@@ -20,6 +20,14 @@ pub async fn execute_monitor(socket_path: &str) -> i32 {
         Ok(IpcResponse::Ok { .. }) => {
             println!("Subscribed to systemd-sentry event stream. Press Ctrl+C to exit.\n");
         }
+        Ok(IpcResponse::Error { code, message }) => {
+            eprintln!("Failed to subscribe to daemon event stream (code {}): {}", code, message);
+            return EX_UNAVAILABLE;
+        }
+        Err(e) => {
+            eprintln!("Error communicating with daemon: {}", e);
+            return EX_UNAVAILABLE;
+        }
         _ => {
             eprintln!("Failed to subscribe to daemon event stream.");
             return EX_UNAVAILABLE;

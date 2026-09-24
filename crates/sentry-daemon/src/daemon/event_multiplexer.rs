@@ -6,7 +6,7 @@ use crate::ipc::connection_handler::handle_ipc_connection;
 use crate::system::{DaemonSignal, RemediationExecutor, SheddingTransition, SignalListener};
 use rustix::process::getuid;
 use sentry_driver::dbus::DbusEvent;
-use sentry_driver::notify::notify_status;
+use sentry_driver::notify::{notify_ready, notify_reloading, notify_status};
 use sentry_safety::policy::load_policy_with_dropins;
 use std::sync::Arc;
 use std::time::Duration;
@@ -46,11 +46,9 @@ pub async fn run_event_loop(
                 match dbus_opt {
                     Some(DbusEvent::UnitFailed(event)) => {
                         let state_clone = Arc::clone(&state);
+                        let exec_clone = remediation_executor.clone();
                         tokio::spawn(async move {
-                            let exec = RemediationExecutor::new(
-                                state_clone.lock().await.policy_gatekeeper.clone()
-                            );
-                            IncidentManager::handle_unit_failure(event, state_clone, &exec).await;
+                            IncidentManager::handle_unit_failure(event, state_clone, &exec_clone).await;
                         });
                     }
                     Some(_other) => {}
@@ -63,12 +61,14 @@ pub async fn run_event_loop(
                 match sig {
                     DaemonSignal::Reload => {
                         info!("Received SIGHUP: reloading policy and drop-in configurations");
+                        let _ = notify_reloading();
                         let mut s = state.lock().await;
                         let base_path = std::path::Path::new(&s.config.policy_path);
                         let dropin_dir = std::path::Path::new(&s.config.policy_dropin_dir);
                         let policy = load_policy_with_dropins(base_path, dropin_dir);
                         s.policy_gatekeeper = sentry_safety::policy::PolicyGatekeeper::new(policy);
                         remediation_executor.update_gatekeeper(s.policy_gatekeeper.clone());
+                        let _ = notify_ready();
                         info!("Policy successfully reloaded");
                     }
                     DaemonSignal::Shutdown => {

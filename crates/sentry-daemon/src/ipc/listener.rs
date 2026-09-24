@@ -11,8 +11,13 @@ use tokio::net::UnixListener;
 /// Bind to the designated UNIX domain socket path or adopt systemd socket-activated FD 3.
 pub fn bind_or_activate_socket(socket_path: &str) -> Result<UnixListener, Error> {
     // 1. Check for systemd socket activation ($LISTEN_FDS)
-    if let Ok(fds) = parse_listen_fds(true) {
-        if let Some(sock) = fds.into_iter().find(|s| s.fd == 3) {
+    if let Ok(mut fds) = parse_listen_fds(true) {
+        if let Some(sock) = fds
+            .iter()
+            .position(|s| s.name == "sentry" || s.name == "systemd-sentry" || s.name == "sentry.socket")
+            .map(|idx| fds.remove(idx))
+            .or_else(|| fds.into_iter().next())
+        {
             return sock.into_tokio_unix_listener();
         }
     }

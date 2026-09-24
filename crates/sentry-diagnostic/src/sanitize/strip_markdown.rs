@@ -4,23 +4,23 @@
 pub fn strip_markdown_fences(input: &str) -> &str {
     let trimmed = input.trim();
 
-    // Strip starting markdown fence
-    let without_prefix = if let Some(stripped) = trimmed.strip_prefix("```json") {
-        stripped
-    } else if let Some(stripped) = trimmed.strip_prefix("```JSON") {
-        stripped
-    } else if let Some(stripped) = trimmed.strip_prefix("```") {
-        stripped
+    // Find starting code fence (either at start or after conversational preface)
+    let after_open = if let Some(pos) = trimmed.find("```json") {
+        &trimmed[pos + 7..]
+    } else if let Some(pos) = trimmed.find("```JSON") {
+        &trimmed[pos + 7..]
+    } else if let Some(pos) = trimmed.find("```") {
+        &trimmed[pos + 3..]
     } else {
         trimmed
     };
 
-    let without_prefix = without_prefix.trim_start();
+    let content = after_open.trim_start();
 
-    // Strip trailing markdown fence
-    if let Some(stripped) = without_prefix.strip_suffix("```") {
-        stripped.trim()
+    // Strip trailing markdown fence if present
+    if let Some(end_pos) = content.rfind("```") {
+        content[..end_pos].trim()
     } else {
-        without_prefix.trim()
+        content.trim()
     }
 }
