@@ -2,6 +2,8 @@
 
 use sentry_driver::cgroup::{read_cgroup_memory, read_cgroup_memory_stats};
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
 
 #[test]
@@ -39,4 +41,19 @@ fn test_read_cgroup_memory_with_max_string() {
     let stats = read_cgroup_memory_stats(dir.path()).unwrap();
     assert_eq!(stats.current, 5000);
     assert_eq!(stats.max, None);
+}
+
+#[test]
+#[cfg(unix)]
+fn test_read_cgroup_memory_permission_denied_defaults() {
+    let dir = tempdir().unwrap();
+    let mem_file = dir.path().join("memory.current");
+    fs::write(&mem_file, b"1048576\n").unwrap();
+    fs::set_permissions(&mem_file, fs::Permissions::from_mode(0o000)).unwrap();
+
+    let (current, max, _) = read_cgroup_memory(dir.path()).expect("Must not error on EACCES");
+    assert_eq!(current, None);
+    assert_eq!(max, None);
+
+    fs::set_permissions(&mem_file, fs::Permissions::from_mode(0o644)).unwrap();
 }

@@ -5,9 +5,9 @@ use crate::ipc::protocol::IpcResponse;
 use crate::system::RemediationExecutor;
 use sentry_core::models::IncidentContext;
 use sentry_diagnostic::fallback::DeterministicFallbackEngine;
-use sentry_driver::cgroup::collect_cgroup_telemetry;
+use sentry_driver::cgroup::collect_cgroup_telemetry_resilient;
 use sentry_driver::dbus::UnitFailedEvent;
-use sentry_driver::psi::collect_system_psi;
+use sentry_driver::psi::collect_system_psi_resilient;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tracing::{info, warn};
@@ -34,8 +34,8 @@ impl IncidentManager {
         // 2. Gather kernel telemetry
         let cgroup_root = std::path::Path::new("/sys/fs/cgroup");
         let proc_path = std::path::Path::new("/proc/pressure");
-        let cgroup = collect_cgroup_telemetry(cgroup_root, &unit_name).ok();
-        let pressure = collect_system_psi(proc_path).ok();
+        let cgroup = Some(collect_cgroup_telemetry_resilient(cgroup_root, &unit_name, None));
+        let pressure = Some(collect_system_psi_resilient(proc_path));
 
         // 3. Assemble incident context
         let details = sentry_core::models::UnitFailedDetails {

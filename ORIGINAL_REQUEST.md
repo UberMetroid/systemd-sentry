@@ -124,3 +124,38 @@ Teamwork Supervisor: Update from parent agent.
 3. System integration packaging (`install/install.sh`), standard Unix roff manual pages (`man1`, `man5`, `man8`), shell completions (`bash`, `zsh`, `fish`), and comprehensive architecture/hardening/policy/provider/mcp docs are complete and verified.
 4. The Opinionated Systems Engineer has completed an unsparing final audit and issued a "PRODUCTION READY & HARDENED" verdict.
 5. All 253 tests pass, all 87 E2E tests pass, 4 cargo-fuzz targets compile cleanly, 282/282 source files strictly <= 256 LOC, and zero dynamic C dependencies.
+
+## Follow-up — 2026-09-24T07:36:53Z
+
+Harden and resolve edge cases across `systemd-sentry` in pure Rust, ensuring resilient operation in constrained environments (containers, compressed crash dumps, multi-socket systemd setups, and transient LLM latency).
+
+Working directory: /home/jeryd/Projects/UberMetroid/systemd-sentry
+Integrity mode: development
+
+## Requirements
+
+### R1. Compressed Coredump Metadata Extraction
+Extract extended attributes (`user.coredump.*`) and bounded ELF crash headers from compressed coredump archives (`.zst` and `.lz4` files in `/var/lib/systemd/coredump`) without decompressing full multi-hundred megabyte crash binaries into heap memory.
+
+### R2. Unprivileged Container & Virtualized Host Fallback Resilience
+Ensure graceful, warning-free degradation when `/proc/pressure` (PSI) or `/sys/fs/cgroup` (cgroups v2) are absent, restricted, or unmounted (e.g. Docker, unprivileged LXC, or legacy kernels), providing synthetic fallback metrics so triage continues without failing.
+
+### R3. Adaptive LLM Inference Timeout & Zero-Latency Fallback
+Implement an adaptive timeout and failure circuit for LLM providers (Ollama, llama.cpp, OpenAI-compatible APIs) that cleanly aborts slow inference calls and transfers execution immediately to `DeterministicFallbackEngine` without blocking the daemon or dropping events.
+
+### R4. Multi-Socket Activation Disambiguation
+Ensure socket activation supports complex environments with multiple listening descriptors by matching socket names from `$LISTEN_FDNAMES` (`sentry`, `systemd-sentry`, `sentry.socket`) or checking socket inode types, without relying on fixed descriptor indices.
+
+## Acceptance Criteria
+
+### Verification & Test Compliance
+- [ ] `cargo test --workspace` passes with 100% success rate
+- [ ] `cargo test --manifest-path qa/Cargo.toml` passes with 100% success rate across all test tiers
+- [ ] `./scripts/check_loc.sh` passes with zero violations (all files strictly <= 256 physical LOC)
+- [ ] `./scripts/check_deps.sh` passes with zero violations (zero dynamic C libraries linked; 100% pure Rust)
+- [ ] Memory footprint remains strictly bounded within the <15MB RSS target on 512MB RAM VPS hosts
+- [ ] All changes are committed and pushed to `origin main` on GitHub
+
+## Verification Resources
+- Test suites in `qa/unit/`, `qa/e2e/`, and `qa/edge/`
+- Enforcing scripts in `scripts/check_loc.sh` and `scripts/check_deps.sh`

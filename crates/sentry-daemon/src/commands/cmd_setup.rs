@@ -65,6 +65,7 @@ pub async fn execute_setup() -> i32 {
         },
         timeout: std::time::Duration::from_secs(10),
         temperature: 0.1,
+        adaptive: Default::default(),
     };
 
     println!("\nProposed /etc/systemd-sentry/config.toml:");

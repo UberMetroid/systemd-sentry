@@ -1,6 +1,6 @@
 //! UNIX domain socket listener with systemd socket activation and stale socket recovery.
 
-use sentry_driver::activation::parse_listen_fds;
+use sentry_driver::activation::{disambiguate_socket, parse_listen_fds};
 use std::fs;
 use std::io::{Error, ErrorKind};
 use std::os::unix::fs::PermissionsExt;
@@ -10,20 +10,20 @@ use tokio::net::UnixListener;
 
 /// Bind to the designated UNIX domain socket path or adopt systemd socket-activated FD 3.
 pub fn bind_or_activate_socket(socket_path: &str) -> Result<UnixListener, Error> {
+    let path = Path::new(socket_path);
+
     // 1. Check for systemd socket activation ($LISTEN_FDS)
     if let Ok(mut fds) = parse_listen_fds(true) {
-        if let Some(sock) = fds
-            .iter()
-            .position(|s| s.name == "sentry" || s.name == "systemd-sentry" || s.name == "sentry.socket")
-            .map(|idx| fds.remove(idx))
-            .or_else(|| fds.into_iter().next())
-        {
+        if let Some(sock) = disambiguate_socket(
+            &mut fds,
+            &["sentry", "systemd-sentry", "sentry.socket"],
+            Some(path),
+        ) {
             return sock.into_tokio_unix_listener();
         }
     }
 
     // 2. Fallback: Bind manually to filesystem path
-    let path = Path::new(socket_path);
 
     // Ensure parent directory exists with 0755 permissions
     if let Some(parent) = path.parent() {

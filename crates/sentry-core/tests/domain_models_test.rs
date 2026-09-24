@@ -63,6 +63,7 @@ fn test_cgroup_telemetry_oom_and_memory_util() {
         populated: Some(true),
         frozen: Some(false),
         timestamp_usec: 123456,
+        synthetic: false,
     };
 
     assert!(!telem.had_oom_kill());

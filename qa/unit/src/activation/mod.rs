@@ -6,7 +6,12 @@ use std::sync::Mutex;
 pub static ACTIVATION_ENV_LOCK: Mutex<()> = Mutex::new(());
 
 pub mod test_activation_parser;
+pub mod test_disambiguation;
 pub mod test_fd_flags;
+pub mod test_listener_integration;
 pub mod test_model;
 pub mod test_name_parser;
 pub mod test_pid_validator;
+pub mod test_socket_inspector;
+
+

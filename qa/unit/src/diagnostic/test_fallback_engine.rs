@@ -68,6 +68,7 @@ fn test_fallback_engine_with_cgroup_memory_limit() {
         populated: Some(true),
         frozen: Some(false),
         timestamp_usec: 0,
+        synthetic: false,
     };
 
     let ctx = IncidentContext::new(

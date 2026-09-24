@@ -153,6 +153,7 @@ fn test_fallback_with_extreme_cgroup_telemetry() {
         populated: Some(true),
         frozen: Some(false),
         timestamp_usec: 12345678,
+        synthetic: false,
     };
 
     let mut ctx = make_base_context(

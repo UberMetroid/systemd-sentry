@@ -103,9 +103,47 @@ pub struct CgroupTelemetry {
     pub frozen: Option<bool>,
     /// Telemetry sample timestamp in microseconds.
     pub timestamp_usec: u64,
+    /// Whether this telemetry was synthetically derived or from procfs fallback.
+    #[serde(default)]
+    pub synthetic: bool,
 }
 
 impl CgroupTelemetry {
+    /// Constructs a synthetic fallback `CgroupTelemetry` snapshot when cgroup v2 hierarchy is unavailable.
+    pub fn synthetic_fallback(unit: Option<String>, path: Option<String>) -> Self {
+        let cgroup_path = match path {
+            Some(p) if p.contains("synthetic") => p,
+            Some(p) => format!("{}/synthetic", p.trim_end_matches('/')),
+            None => match &unit {
+                Some(u) => format!("/sys/fs/cgroup/synthetic/{}", u),
+                None => "/sys/fs/cgroup/synthetic".to_string(),
+            },
+        };
+        let timestamp_usec = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_micros() as u64;
+
+        Self {
+            unit,
+            cgroup_path,
+            memory_current_bytes: None,
+            memory_max_bytes: None,
+            memory_events: MemoryEvents::default(),
+            cpu_stat: CpuStat::default(),
+            io_stats: Vec::new(),
+            populated: None,
+            frozen: None,
+            timestamp_usec,
+            synthetic: true,
+        }
+    }
+
+    /// Returns true if this cgroup telemetry snapshot is synthetic or procfs fallback.
+    pub fn is_synthetic(&self) -> bool {
+        self.synthetic || self.cgroup_path.contains("synthetic") || self.cgroup_path.starts_with("/proc")
+    }
+
     /// Checks if this cgroup suffered any OOM kills.
     pub fn had_oom_kill(&self) -> bool {
         self.memory_events.oom_kill > 0 || self.memory_events.oom > 0

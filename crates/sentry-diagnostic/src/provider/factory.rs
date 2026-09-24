@@ -34,6 +34,9 @@ pub struct ProviderConfig {
     pub timeout: Duration,
     /// Sampling temperature (default 0.1).
     pub temperature: f32,
+    /// Adaptive timeout and circuit breaker configuration.
+    #[serde(default)]
+    pub adaptive: crate::circuit::AdaptiveTimeoutConfig,
 }
 
 impl Default for ProviderConfig {
@@ -45,6 +48,7 @@ impl Default for ProviderConfig {
             api_key: None,
             timeout: Duration::from_secs(45),
             temperature: 0.1,
+            adaptive: crate::circuit::AdaptiveTimeoutConfig::default(),
         }
     }
 }

@@ -9,7 +9,12 @@ use std::path::Path;
 fn read_sysfs_str<'a>(path: &Path, buf: &'a mut [u8; 512]) -> Result<Option<&'a str>, std::io::Error> {
     let mut file = match File::open(path) {
         Ok(f) => f,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e)
+            if e.kind() == std::io::ErrorKind::NotFound
+                || e.kind() == std::io::ErrorKind::PermissionDenied =>
+        {
+            return Ok(None)
+        }
         Err(e) => return Err(e),
     };
     let mut total = 0;
@@ -18,6 +23,7 @@ fn read_sysfs_str<'a>(path: &Path, buf: &'a mut [u8; 512]) -> Result<Option<&'a 
             Ok(0) => break,
             Ok(n) => total += n,
             Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => return Ok(None),
             Err(e) => return Err(e),
         }
     }

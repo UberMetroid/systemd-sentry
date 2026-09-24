@@ -12,6 +12,7 @@ fn test_create_ollama_provider() {
         api_key: None,
         timeout: Duration::from_secs(30),
         temperature: 0.1,
+        adaptive: Default::default(),
     };
 
     let provider = create_provider(&config);
@@ -27,6 +28,7 @@ fn test_create_llama_cpp_provider() {
         api_key: None,
         timeout: Duration::from_secs(30),
         temperature: 0.1,
+        adaptive: Default::default(),
     };
 
     let provider = create_provider(&config);
@@ -42,6 +44,7 @@ fn test_create_openai_provider() {
         api_key: Some("secret".to_string()),
         timeout: Duration::from_secs(30),
         temperature: 0.1,
+        adaptive: Default::default(),
     };
 
     let provider = create_provider(&config);

@@ -2,6 +2,8 @@
 
 use sentry_driver::cgroup::read_cgroup_io;
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use tempfile::tempdir;
 
 #[test]
@@ -43,4 +45,18 @@ invalid_device_no_colon rbytes=100
     assert_eq!(stats.len(), 1);
     assert_eq!(stats[0].device, "8:0");
     assert_eq!(stats[0].rbytes, 1024);
+}
+
+#[test]
+#[cfg(unix)]
+fn test_read_cgroup_io_permission_denied_returns_empty() {
+    let dir = tempdir().unwrap();
+    let io_file = dir.path().join("io.stat");
+    fs::write(&io_file, "259:0 rbytes=1048576\n").unwrap();
+    fs::set_permissions(&io_file, fs::Permissions::from_mode(0o000)).unwrap();
+
+    let stats = read_cgroup_io(dir.path()).expect("Must not error on EACCES");
+    assert!(stats.is_empty());
+
+    fs::set_permissions(&io_file, fs::Permissions::from_mode(0o644)).unwrap();
 }

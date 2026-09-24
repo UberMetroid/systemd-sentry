@@ -4,18 +4,13 @@ use crate::cli::exit_codes::EX_OK;
 use crate::config::daemon_config::DaemonConfig;
 use sentry_core::models::{IncidentContext, UnitFailedDetails};
 use sentry_diagnostic::DiagnosticEngine;
-use sentry_driver::cgroup::collect_cgroup_telemetry;
+use sentry_driver::cgroup::collect_cgroup_telemetry_resilient;
 use sentry_driver::coredump::find_latest_coredump;
 use sentry_driver::dbus::{decode_unit_properties, get_service_properties, get_unit_properties};
-use sentry_driver::psi::collect_system_psi;
+use sentry_driver::psi::collect_system_psi_resilient;
 
 /// Execute the `triage` subcommand.
 pub async fn execute_triage(unit: &str, json: bool, config: &DaemonConfig) -> i32 {
-    let cgroup_root = std::path::Path::new("/sys/fs/cgroup");
-    let proc_path = std::path::Path::new("/proc/pressure");
-    let cgroup = collect_cgroup_telemetry(cgroup_root, unit).ok();
-    let pressure = collect_system_psi(proc_path).ok();
-
     let mut active_state = "failed".to_string();
     let mut sub_state = "failed".to_string();
     let mut result = Some("exit-code".to_string());
@@ -45,6 +40,11 @@ pub async fn execute_triage(unit: &str, json: bool, config: &DaemonConfig) -> i3
             }
         }
     }
+
+    let cgroup_root = std::path::Path::new("/sys/fs/cgroup");
+    let proc_path = std::path::Path::new("/proc/pressure");
+    let cgroup = Some(collect_cgroup_telemetry_resilient(cgroup_root, unit, main_pid));
+    let pressure = Some(collect_system_psi_resilient(proc_path));
 
     let coredump_dir = std::path::Path::new("/var/lib/systemd/coredump");
     let comm_prefix = unit.strip_suffix(".service").unwrap_or(unit);

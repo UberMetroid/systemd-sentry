@@ -1,6 +1,7 @@
 //! Process crash and backtrace information from systemd-coredump.
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Extended attributes parsed from a coredump file.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -15,6 +16,63 @@ pub struct CoredumpXattrs {
     pub exe: Option<String>,
     /// Unit name from systemd extended attributes (e.g. `user.coredump.unit`).
     pub unit: Option<String>,
+    /// User ID of process owner.
+    pub uid: Option<u32>,
+    /// Group ID of process owner.
+    pub gid: Option<u32>,
+    /// Hostname where crash occurred.
+    pub hostname: Option<String>,
+    /// Resource limit (rlimit) string.
+    pub rlimit: Option<String>,
+    /// Timestamp of crash in microseconds.
+    pub timestamp: Option<u64>,
+    /// Full /proc/<pid>/status text if captured.
+    pub proc_status: Option<String>,
+    /// Command line arguments (/proc/<pid>/cmdline).
+    pub cmdline: Option<String>,
+    /// Additional unrecognized or custom `user.coredump.*` extended attributes.
+    pub extra: HashMap<String, String>,
+}
+
+/// Bounded ELF crash header and note metadata extracted from coredump streams.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct ElfCrashHeader {
+    /// ELF class (1 = 32-bit, 2 = 64-bit).
+    pub class: u8,
+    /// ELF endianness (1 = little-endian, 2 = big-endian).
+    pub endian: u8,
+    /// ELF endianness alias (1 = little-endian, 2 = big-endian).
+    pub endianness: u8,
+    /// ELF machine / architecture ID (e.g. 0x3E for x86_64).
+    pub machine: u16,
+    /// Human-readable architecture name (e.g. "x86_64", "aarch64", "x86").
+    pub architecture: String,
+    /// Terminating signal number if captured from notes.
+    pub signal: Option<i32>,
+    /// Signal code (si_code) if captured from notes.
+    pub signal_code: Option<i32>,
+    /// Fault address (si_addr) if captured from notes.
+    pub fault_addr: Option<u64>,
+    /// PID of terminating process.
+    pub pid: Option<u32>,
+    /// Process / command name (comm / pr_fname).
+    pub comm: Option<String>,
+    /// Command line arguments (cmdline / pr_psargs).
+    pub cmdline: Option<String>,
+    /// List of mapped files (executable and shared libraries).
+    pub mapped_files: Vec<String>,
+}
+
+impl ElfCrashHeader {
+    /// Returns true if the ELF class indicates a 64-bit binary.
+    pub fn is_64bit(&self) -> bool {
+        self.class == 2
+    }
+
+    /// Returns true if the ELF endianness is little-endian.
+    pub fn is_little_endian(&self) -> bool {
+        self.endian == 1
+    }
 }
 
 /// Crash event record parsed from journal or coredump storage.

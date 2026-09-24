@@ -10,6 +10,10 @@ use sentry_core::models::DiagnosticPayload;
 #[derive(Debug, Default, Clone)]
 pub struct SanitizationPipeline;
 
+/// Type alias for `SanitizationPipeline`.
+pub type DiagnosticSanitizer = SanitizationPipeline;
+
+
 impl SanitizationPipeline {
     /// Constructs a new sanitization pipeline.
     pub fn new() -> Self {

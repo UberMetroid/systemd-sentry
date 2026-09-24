@@ -19,6 +19,8 @@ chrono.workspace = true
 uuid.workspace = true
 tracing.workspace = true
 futures-lite.workspace = true
+lz4_flex.workspace = true
+ruzstd.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

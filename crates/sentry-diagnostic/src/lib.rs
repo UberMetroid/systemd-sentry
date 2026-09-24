@@ -11,14 +11,25 @@
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 
+pub mod circuit;
 pub mod engine;
 pub mod fallback;
 pub mod provider;
 pub mod sanitize;
 pub mod schema;
 
+pub use circuit::{
+    AdaptiveTimeoutConfig, LatencyTracker, ProviderAction, ProviderBreaker, ProviderCircuitState,
+};
 pub use engine::DiagnosticEngine;
 pub use fallback::DeterministicFallbackEngine;
-pub use provider::{create_provider, LlamaCppClient, LlmProvider, OllamaClient, OpenAiClient, ProviderConfig, ProviderKind};
-pub use sanitize::SanitizationPipeline;
-pub use schema::{diagnostic_payload_json_schema, openai_response_format, DiagnosticPrompt, ProviderHealth, RawLlmResponse};
+pub use provider::{
+    create_provider, LlamaCppClient, LlmProvider, OllamaClient, OpenAiClient, ProviderConfig,
+    ProviderKind,
+};
+pub use sanitize::{DiagnosticSanitizer, SanitizationPipeline};
+pub use schema::{
+    diagnostic_payload_json_schema, openai_response_format, DiagnosticPrompt, ProviderHealth,
+    RawLlmResponse,
+};
+

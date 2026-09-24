@@ -4,6 +4,7 @@ use std::io;
 use std::net::TcpListener as StdTcpListener;
 use std::os::unix::io::{FromRawFd, RawFd};
 use std::os::unix::net::UnixListener as StdUnixListener;
+use std::path::PathBuf;
 use tokio::net::{TcpListener as TokioTcpListener, UnixListener as TokioUnixListener};
 
 /// File descriptor passed to the process via systemd socket activation.
@@ -55,5 +56,15 @@ impl ActivatedSocket {
         let std_listener = self.into_std_unix_listener();
         std_listener.set_nonblocking(true)?;
         TokioUnixListener::from_std(std_listener)
+    }
+
+    /// Returns true if this activated descriptor is a listening UNIX domain stream socket.
+    pub fn is_unix_stream_listener(&self) -> bool {
+        super::socket_inspector::is_unix_stream_listener(self.fd)
+    }
+
+    /// Returns the filesystem path bound to this socket, if any.
+    pub fn bound_path(&self) -> Option<PathBuf> {
+        super::socket_inspector::get_socket_bound_path(self.fd)
     }
 }
