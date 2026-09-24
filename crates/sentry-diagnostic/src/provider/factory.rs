@@ -6,8 +6,10 @@ use crate::provider::openai::OpenAiClient;
 use crate::provider::LlmProvider;
 use std::time::Duration;
 
+use serde::{Deserialize, Serialize};
+
 /// Supported LLM provider types.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ProviderKind {
     /// Local Ollama daemon.
     Ollama,
@@ -18,7 +20,7 @@ pub enum ProviderKind {
 }
 
 /// Unified provider configuration parameters.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProviderConfig {
     /// Provider kind.
     pub kind: ProviderKind,

@@ -2,15 +2,37 @@
 
 use sentry_core::error::TelemetryError;
 use sentry_core::models::IoDeviceMetrics;
-use std::fs;
+use std::fs::File;
+use std::io::Read;
 use std::path::Path;
+
+fn read_sysfs_str<'a>(path: &Path, buf: &'a mut [u8; 512]) -> Result<Option<&'a str>, std::io::Error> {
+    let mut file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(e),
+    };
+    let mut total = 0;
+    while total < buf.len() {
+        match file.read(&mut buf[total..]) {
+            Ok(0) => break,
+            Ok(n) => total += n,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(e),
+        }
+    }
+    let s = std::str::from_utf8(&buf[..total])
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    Ok(Some(s))
+}
 
 /// Reads and parses `io.stat` file into a vector of per-device metrics.
 pub fn read_cgroup_io(cgroup_dir: &Path) -> Result<Vec<IoDeviceMetrics>, TelemetryError> {
     let io_file = cgroup_dir.join("io.stat");
-    let content = match fs::read_to_string(&io_file) {
-        Ok(c) => c,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+    let mut buf = [0u8; 512];
+    let content = match read_sysfs_str(&io_file, &mut buf) {
+        Ok(Some(c)) => c,
+        Ok(None) => return Ok(Vec::new()),
         Err(e) => return Err(TelemetryError::Io("io.stat", e)),
     };
 

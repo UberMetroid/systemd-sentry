@@ -94,6 +94,12 @@ impl CircuitBreakerRegistry {
         self.breakers.len()
     }
 
+    /// Force eviction of idle healthy units whose TTL has expired.
+    pub fn evict_idle_breakers(&mut self, now: Instant) {
+        let ttl = self.idle_ttl;
+        self.breakers.retain(|_, b| !b.is_idle(now, ttl));
+    }
+
     fn ensure_capacity_or_evict(&mut self, now: Instant) {
         if self.breakers.len() < self.max_units {
             return;

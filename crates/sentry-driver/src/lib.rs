@@ -21,7 +21,7 @@ pub use cgroup::{
     collect_cgroup_telemetry, locate_unit_cgroup, read_cgroup_cpu, read_cgroup_io,
     read_cgroup_memory,
 };
-pub use coredump::{extract_backtrace, match_coredump_record, read_coredump_xattrs};
+pub use coredump::{extract_backtrace, find_latest_coredump, match_coredump_record, read_coredump_xattrs};
 pub use dbus::{
     decode_unit_properties, escape_unit_name, extract_unit_failed_event,
     object_path_to_unit_name, unescape_unit_name, unit_name_to_object_path, DbusDriverError,

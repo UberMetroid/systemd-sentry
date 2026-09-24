@@ -37,3 +37,4 @@ ReadWritePaths=/var/lib/systemd-sentry /var/log/systemd-sentry /run/systemd-sent
 
 [Install]
 WantedBy=multi-user.target
+Alias=sentry.service

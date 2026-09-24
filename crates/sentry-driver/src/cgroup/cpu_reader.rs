@@ -2,15 +2,37 @@
 
 use sentry_core::error::TelemetryError;
 use sentry_core::models::CpuStat;
-use std::fs;
+use std::fs::File;
+use std::io::Read;
 use std::path::Path;
+
+fn read_sysfs_str<'a>(path: &Path, buf: &'a mut [u8; 512]) -> Result<Option<&'a str>, std::io::Error> {
+    let mut file = match File::open(path) {
+        Ok(f) => f,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(e),
+    };
+    let mut total = 0;
+    while total < buf.len() {
+        match file.read(&mut buf[total..]) {
+            Ok(0) => break,
+            Ok(n) => total += n,
+            Err(e) if e.kind() == std::io::ErrorKind::Interrupted => continue,
+            Err(e) => return Err(e),
+        }
+    }
+    let s = std::str::from_utf8(&buf[..total])
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+    Ok(Some(s))
+}
 
 /// Reads and parses `cpu.stat` file into `CpuStat`.
 pub fn read_cgroup_cpu(cgroup_dir: &Path) -> Result<CpuStat, TelemetryError> {
     let cpu_file = cgroup_dir.join("cpu.stat");
-    let content = match fs::read_to_string(&cpu_file) {
-        Ok(c) => c,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(CpuStat::default()),
+    let mut buf = [0u8; 512];
+    let content = match read_sysfs_str(&cpu_file, &mut buf) {
+        Ok(Some(c)) => c,
+        Ok(None) => return Ok(CpuStat::default()),
         Err(e) => return Err(TelemetryError::Io("cpu.stat", e)),
     };
 

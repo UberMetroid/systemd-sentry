@@ -13,6 +13,7 @@ sentry-driver.workspace = true
 sentry-diagnostic.workspace = true
 sentry-mcp.workspace = true
 sentry-safety.workspace = true
+sentry-daemon.workspace = true
 async-trait.workspace = true
 tokio = { workspace = true, features = ["test-util", "io-util"] }
 tempfile.workspace = true

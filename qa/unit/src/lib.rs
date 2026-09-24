@@ -22,3 +22,5 @@ pub mod diagnostic;
 pub mod mcp;
 #[cfg(test)]
 pub mod safety;
+#[cfg(test)]
+pub mod daemon;

@@ -71,16 +71,16 @@ impl SystemdDbusListener {
                 };
                 let header = msg.header();
                 let member = match header.member() {
-                    Some(m) => m.as_str().to_string(),
+                    Some(m) => m.as_str(),
                     None => continue,
                 };
                 let iface = match header.interface() {
-                    Some(i) => i.as_str().to_string(),
+                    Some(i) => i.as_str(),
                     None => continue,
                 };
 
                 if iface == "org.freedesktop.systemd1.Manager" {
-                    Self::handle_manager_signal(&member, &msg, &tx).await;
+                    Self::handle_manager_signal(member, &msg, &tx).await;
                 } else if iface == "org.freedesktop.DBus.Properties" && member == "PropertiesChanged"
                 {
                     Self::handle_properties_signal(&msg, &tx).await;

@@ -6,6 +6,7 @@ members = [
     "crates/sentry-diagnostic",
     "crates/sentry-mcp",
     "crates/sentry-safety",
+    "crates/sentry-daemon",
     "qa/unit",
 ]
 
@@ -23,6 +24,7 @@ sentry-driver = { path = "crates/sentry-driver" }
 sentry-diagnostic = { path = "crates/sentry-diagnostic" }
 sentry-mcp = { path = "crates/sentry-mcp" }
 sentry-safety = { path = "crates/sentry-safety" }
+sentry-daemon = { path = "crates/sentry-daemon" }
 
 # HTTP client & async traits (pure Rust TLS, zero libssl/libcrypto)
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
@@ -33,7 +35,7 @@ zbus = { version = "5.19", default-features = false, features = ["tokio"] }
 
 # Pure Rust async runtime & system interfaces
 tokio = { version = "1.40", features = ["rt-multi-thread", "macros", "net", "fs", "io-util", "io-std", "signal", "time", "process"] }
-rustix = { version = "0.38", features = ["fs", "net", "process", "event"] }
+rustix = { version = "0.38", features = ["fs", "net", "process", "event", "param"] }
 
 # Pure Rust serialization
 serde = { version = "1.0", features = ["derive"] }

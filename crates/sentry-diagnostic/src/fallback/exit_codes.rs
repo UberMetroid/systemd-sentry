@@ -21,17 +21,22 @@ pub struct ExitCodeTriageResult {
 pub fn triage_exit_code(exit_code: Option<i32>, signal: Option<&str>) -> Option<ExitCodeTriageResult> {
     let sig_upper = signal.map(|s| s.trim().to_uppercase());
 
-    // 1. Check exit code 137 or SIGKILL (OOM Killer)
-    if exit_code == Some(137) || sig_upper.as_deref() == Some("SIGKILL") || sig_upper.as_deref() == Some("KILL") {
+    // 1. Check exit code 137, SIGKILL, or systemd-oomd Result=oom-kill
+    if exit_code == Some(137)
+        || sig_upper.as_deref() == Some("SIGKILL")
+        || sig_upper.as_deref() == Some("KILL")
+        || sig_upper.as_deref() == Some("OOM-KILL")
+        || sig_upper.as_deref() == Some("OOM_KILL")
+    {
         return Some(ExitCodeTriageResult {
             root_cause: RootCause {
-                summary: "Process terminated by Out-Of-Memory killer (SIGKILL)".to_string(),
-                detail: "Kernel invoked OOM killer or system sent SIGKILL (exit code 137) due to memory resource exhaustion.".to_string(),
+                summary: "Process terminated by Out-Of-Memory killer (SIGKILL / systemd-oomd)".to_string(),
+                detail: "Kernel invoked OOM killer or systemd-oomd terminated unit due to cgroup memory/PSI pressure exhaustion.".to_string(),
             },
             severity: Severity::High,
             action: RemediationAction::RestartWithBackoff,
             risk_level: RiskLevel::Medium,
-            confidence_permille: 900,
+            confidence_permille: 950,
         });
     }
 

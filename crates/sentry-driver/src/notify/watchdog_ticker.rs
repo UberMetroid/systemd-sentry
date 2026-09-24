@@ -1,7 +1,8 @@
 //! Asynchronous watchdog heartbeat ticker task.
 
-use super::sender::notify_watchdog;
+use super::socket_addr::resolve_notify_address;
 use super::watchdog_config::WatchdogConfig;
+use std::os::unix::net::UnixDatagram;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 use tokio::time::{interval, MissedTickBehavior};
@@ -15,6 +16,8 @@ pub struct WatchdogTicker {
 
 impl WatchdogTicker {
     /// Spawns an asynchronous watchdog heartbeat loop in Tokio.
+    ///
+    /// Persists an unbound UnixDatagram socket across ticks to eliminate redundant syscalls.
     pub fn spawn(config: WatchdogConfig) -> Self {
         let (cancel_tx, mut cancel_rx) = oneshot::channel();
         let target_interval = config.interval.max(std::time::Duration::from_micros(1));
@@ -23,17 +26,46 @@ impl WatchdogTicker {
             let mut ticker = interval(target_interval);
             ticker.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
+            let persistent = match std::env::var("NOTIFY_SOCKET") {
+                Ok(val) if !val.is_empty() => match resolve_notify_address(&val) {
+                    Ok(addr) => match UnixDatagram::unbound() {
+                        Ok(sock) => {
+                            let _ = sock.set_nonblocking(true);
+                            Some((sock, addr))
+                        }
+                        Err(e) => {
+                            error!("Failed to create persistent watchdog datagram socket: {e}");
+                            None
+                        }
+                    },
+                    Err(e) => {
+                        error!("Failed to resolve NOTIFY_SOCKET for watchdog ticker: {e}");
+                        None
+                    }
+                },
+                _ => None,
+            };
+
+            let payload = b"WATCHDOG=1\n";
+
             loop {
                 tokio::select! {
                     _ = ticker.tick() => {
-                        match notify_watchdog() {
-                            Ok(true) => debug!("Watchdog tick sent successfully"),
-                            Ok(false) => {
+                        match &persistent {
+                            Some((sock, addr)) => {
+                                match sock.send_to_addr(payload, addr) {
+                                    Ok(_) => debug!("Watchdog tick sent successfully"),
+                                    Err(e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                                        debug!("Watchdog tick would block; socket buffer full");
+                                    }
+                                    Err(e) => {
+                                        error!("Failed to dispatch watchdog tick: {e}");
+                                    }
+                                }
+                            }
+                            None => {
                                 warn!("Watchdog tick skipped: NOTIFY_SOCKET unset");
                                 break;
-                            }
-                            Err(e) => {
-                                error!("Failed to dispatch watchdog tick: {e}");
                             }
                         }
                     }

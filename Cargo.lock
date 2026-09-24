@@ -961,6 +961,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "sentry-daemon"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "rustix 0.38.44",
+ "sentry-core",
+ "sentry-diagnostic",
+ "sentry-driver",
+ "sentry-mcp",
+ "sentry-safety",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "toml",
+ "tracing",
+ "zbus",
+]
+
+[[package]]
 name = "sentry-diagnostic"
 version = "0.1.0"
 dependencies = [
@@ -1019,6 +1041,7 @@ dependencies = [
  "reqwest",
  "rustix 0.38.44",
  "sentry-core",
+ "sentry-daemon",
  "sentry-diagnostic",
  "sentry-driver",
  "sentry-mcp",
