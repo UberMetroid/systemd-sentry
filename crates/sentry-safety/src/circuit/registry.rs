@@ -114,18 +114,15 @@ impl CircuitBreakerRegistry {
         }
 
         // Phase 2: LRU eviction among Closed units with least recent activity
-        let mut closed_candidates: Vec<(String, Instant)> = self
+        let oldest_closed = self
             .breakers
             .iter()
             .filter(|(_, b)| b.snapshot(now).state == "CLOSED")
-            .map(|(k, b)| (k.clone(), b.last_activity()))
-            .collect();
+            .min_by_key(|(_, b)| b.last_activity())
+            .map(|(k, _)| k.clone());
 
-        closed_candidates.sort_by_key(|(_, last)| *last);
-
-        // Evict oldest candidate to make room
-        if let Some((oldest_key, _)) = closed_candidates.first() {
-            self.breakers.remove(oldest_key);
+        if let Some(key) = oldest_closed {
+            self.breakers.remove(&key);
         }
     }
 }
