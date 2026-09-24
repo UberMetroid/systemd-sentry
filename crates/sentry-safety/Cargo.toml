@@ -1,11 +1,15 @@
 [package]
-name = "sentry-safety"
+name = "syntropd-sentry-safety"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 description = "Deterministic zero-trust safety engine, sliding-window circuit breaker, and drop-in policy gatekeeper for systemd-sentry"
+
+[lib]
+name = "sentry_safety"
+path = "src/lib.rs"
 
 [dependencies]
 sentry-core.workspace = true

@@ -967,129 +967,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
-name = "sentry-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "uuid",
-]
-
-[[package]]
-name = "sentry-daemon"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "reqwest",
- "rustix 0.38.44",
- "sentry-core",
- "sentry-diagnostic",
- "sentry-driver",
- "sentry-mcp",
- "sentry-safety",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "toml",
- "tracing",
- "zbus",
-]
-
-[[package]]
-name = "sentry-diagnostic"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "reqwest",
- "sentry-core",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "sentry-driver"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "futures-lite",
- "lz4_flex",
- "rustix 0.38.44",
- "ruzstd",
- "sentry-core",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "uuid",
- "zbus",
-]
-
-[[package]]
-name = "sentry-mcp"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "sentry-core",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "tokio",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "sentry-qa-unit"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "chrono",
- "reqwest",
- "rustix 0.38.44",
- "sentry-core",
- "sentry-daemon",
- "sentry-diagnostic",
- "sentry-driver",
- "sentry-mcp",
- "sentry-safety",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "toml",
- "uuid",
- "zbus",
-]
-
-[[package]]
-name = "sentry-safety"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "sentry-core",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror",
- "toml",
- "tracing",
-]
-
-[[package]]
 name = "serde"
 version = "1.0.229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1260,6 +1137,129 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.6",
+]
+
+[[package]]
+name = "syntropd-sentry"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "reqwest",
+ "rustix 0.38.44",
+ "serde",
+ "serde_json",
+ "syntropd-sentry-core",
+ "syntropd-sentry-diagnostic",
+ "syntropd-sentry-driver",
+ "syntropd-sentry-mcp",
+ "syntropd-sentry-safety",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "toml",
+ "tracing",
+ "zbus",
+]
+
+[[package]]
+name = "syntropd-sentry-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "uuid",
+]
+
+[[package]]
+name = "syntropd-sentry-diagnostic"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "syntropd-sentry-core",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "syntropd-sentry-driver"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "futures-lite",
+ "lz4_flex",
+ "rustix 0.38.44",
+ "ruzstd",
+ "serde",
+ "serde_json",
+ "syntropd-sentry-core",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "uuid",
+ "zbus",
+]
+
+[[package]]
+name = "syntropd-sentry-mcp"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "syntropd-sentry-core",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "syntropd-sentry-qa-unit"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "chrono",
+ "reqwest",
+ "rustix 0.38.44",
+ "serde",
+ "serde_json",
+ "syntropd-sentry",
+ "syntropd-sentry-core",
+ "syntropd-sentry-diagnostic",
+ "syntropd-sentry-driver",
+ "syntropd-sentry-mcp",
+ "syntropd-sentry-safety",
+ "tempfile",
+ "tokio",
+ "toml",
+ "uuid",
+ "zbus",
+]
+
+[[package]]
+name = "syntropd-sentry-safety"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "syntropd-sentry-core",
+ "tempfile",
+ "thiserror",
+ "toml",
+ "tracing",
 ]
 
 [[package]]

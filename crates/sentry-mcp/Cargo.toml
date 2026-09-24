@@ -1,11 +1,15 @@
 [package]
-name = "sentry-mcp"
+name = "syntropd-sentry-mcp"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 description = "Model Context Protocol (MCP) server over stdio for systemd-sentry"
+
+[lib]
+name = "sentry_mcp"
+path = "src/lib.rs"
 
 [dependencies]
 sentry-core.workspace = true
