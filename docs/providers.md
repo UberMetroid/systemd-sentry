@@ -6,7 +6,18 @@
 
 ## 1. Supported Providers
 
-### Provider A: Ollama (Recommended for Local Privacy)
+### Provider A: routerd (Default Local Hardware Routing Daemon)
+`systemd-sentry` connects to `routerd` by default on TCP port 32768 for hardware-arbitrated, cost-optimized local and hybrid model routing.
+```toml
+# /etc/systemd-sentry/config.toml
+[provider]
+provider_type = "openai"
+endpoint = "http://127.0.0.1:32768/v1"
+model = "fast"
+timeout_secs = 10
+```
+
+### Provider B: Ollama (Local Edge Inference)
 Ollama runs high-performance models locally without sending server logs off-host.
 ```toml
 # /etc/systemd-sentry/config.toml
@@ -17,7 +28,7 @@ model = "llama3:8b"
 timeout_secs = 10
 ```
 
-### Provider B: llama.cpp Server
+### Provider C: llama.cpp Server
 Suitable for embedded or resource-constrained nodes running a lightweight `llama-server` binary:
 ```toml
 [provider]
@@ -27,7 +38,7 @@ model = "default"
 timeout_secs = 10
 ```
 
-### Provider C: OpenAI-Compatible APIs (Cloud / vLLM / LiteLLM)
+### Provider D: OpenAI-Compatible APIs (Cloud / vLLM / LiteLLM)
 For high-capacity cloud inference:
 ```toml
 [provider]
@@ -39,7 +50,7 @@ timeout_secs = 15
 api_key = "sk-..."
 ```
 
-### Provider D: Zero-Network Deterministic Fallback
+### Provider E: Zero-Network Deterministic Fallback
 When no AI provider is configured, or during total network partitions, `systemd-sentry` uses its internal deterministic expert system. It evaluates:
 * Process exit status (e.g. `137` = OOM, `139` = Segfault, `143` = SIGTERM)
 * `systemd-coredump` signal tags and top stack frames

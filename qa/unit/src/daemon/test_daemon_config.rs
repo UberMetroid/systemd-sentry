@@ -13,6 +13,9 @@ fn test_default_daemon_config() {
     assert_eq!(config.rss_limit_mb, 15);
     assert_eq!(config.rss_degraded_mb, 13);
     assert_eq!(config.rss_recover_mb, 11);
+    assert_eq!(config.provider.kind, sentry_diagnostic::ProviderKind::OpenAi);
+    assert_eq!(config.provider.base_url, "http://127.0.0.1:32768/v1");
+    assert_eq!(config.provider.model, "fast");
 
     let report = validate_configuration(&config);
     assert!(report.is_valid);
@@ -65,4 +68,37 @@ fn test_systemd_creds_directory_discovery() {
         Some(v) => std::env::set_var("CREDENTIALS_DIRECTORY", v),
         None => std::env::remove_var("CREDENTIALS_DIRECTORY"),
     }
+}
+
+#[tokio::test]
+async fn test_setup_wizard_execution() {
+    let exit_code = sentry_daemon::commands::execute_setup().await;
+    assert_eq!(exit_code, sentry_daemon::cli::EX_OK);
+}
+
+#[tokio::test]
+async fn test_setup_probe_routerd_detected() {
+    let listener = match tokio::net::TcpListener::bind("127.0.0.1:32768").await {
+        Ok(l) => l,
+        Err(_) => return,
+    };
+
+    let server_task = tokio::spawn(async move {
+        if let Ok((mut stream, _)) = listener.accept().await {
+            use tokio::io::{AsyncReadExt, AsyncWriteExt};
+            let mut buf = [0u8; 1024];
+            let _ = stream.read(&mut buf).await;
+            let body = r#"{"object":"list","data":[{"id":"fast"}]}"#;
+            let resp = format!(
+                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{}",
+                body.len(),
+                body
+            );
+            let _ = stream.write_all(resp.as_bytes()).await;
+        }
+    });
+
+    let exit_code = sentry_daemon::commands::execute_setup().await;
+    assert_eq!(exit_code, sentry_daemon::cli::EX_OK);
+    let _ = server_task.await;
 }

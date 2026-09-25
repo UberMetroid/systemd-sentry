@@ -16,8 +16,13 @@ pub async fn execute_setup() -> i32 {
     let mut detected_kind = None;
     let mut detected_endpoint = None;
 
+    let http = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(2))
+        .build()
+        .unwrap_or_default();
+
     // 1. Probe for active routerd
-    if let Ok(res) = reqwest::get("http://127.0.0.1:32768/v1/models").await {
+    if let Ok(res) = http.get("http://127.0.0.1:32768/v1/models").send().await {
         if res.status().is_success() {
             println!("  [+] Detected active local routerd instance on http://127.0.0.1:32768/v1");
             detected_kind = Some(ProviderKind::OpenAi);
@@ -27,7 +32,7 @@ pub async fn execute_setup() -> i32 {
 
     // 2. Probe for local Ollama
     if detected_kind.is_none() {
-        if let Ok(res) = reqwest::get("http://127.0.0.1:11434/api/tags").await {
+        if let Ok(res) = http.get("http://127.0.0.1:11434/api/tags").send().await {
             if res.status().is_success() {
                 println!("  [+] Detected active local Ollama instance on http://127.0.0.1:11434");
                 detected_kind = Some(ProviderKind::Ollama);
@@ -38,7 +43,7 @@ pub async fn execute_setup() -> i32 {
 
     // 3. Probe for local llama.cpp
     if detected_kind.is_none() {
-        if let Ok(res) = reqwest::get("http://127.0.0.1:8080/health").await {
+        if let Ok(res) = http.get("http://127.0.0.1:8080/health").send().await {
             if res.status().is_success() {
                 println!("  [+] Detected active local llama.cpp server on http://127.0.0.1:8080");
                 detected_kind = Some(ProviderKind::LlamaCpp);
