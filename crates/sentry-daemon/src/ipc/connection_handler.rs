@@ -44,7 +44,7 @@ pub async fn handle_ipc_connection(
             if available.is_empty() {
                 break;
             }
-            if let Some(pos) = available.iter().position(|&b| b == b'\n') {
+            if let Some(pos) = available.iter().position(|&b| b == b'\n' || b == b'\0') {
                 let to_take = pos + 1;
                 if !exceeded && bytes_read + to_take <= MAX_IPC_FRAME_SIZE {
                     buf.extend_from_slice(&available[..to_take]);
@@ -79,8 +79,8 @@ pub async fn handle_ipc_connection(
             break;
         }
 
-        let line = match std::str::from_utf8(&buf) {
-            Ok(s) => s,
+        let raw = match std::str::from_utf8(&buf) {
+            Ok(s) => s.trim_matches(|c| c == '\0' || c == '\n' || c == '\r'),
             Err(_) => {
                 let _ = write_response(&mut write_half, &IpcResponse::Error {
                     code: -32700,
@@ -90,7 +90,28 @@ pub async fn handle_ipc_connection(
             }
         };
 
-        let request: IpcRequest = match serde_json::from_str(line) {
+        // Support Varlink org.varlink.service.GetInfo
+        if raw.contains("org.varlink.service.GetInfo") {
+            let varlink_reply = serde_json::json!({
+                "parameters": {
+                    "vendor": "Syntropd",
+                    "product": "systemd-sentry",
+                    "version": env!("CARGO_PKG_VERSION"),
+                    "url": "https://github.com/syntropd/sentry",
+                    "interfaces": [
+                        "org.varlink.service",
+                        "io.syntrop.Sentry1"
+                    ]
+                }
+            });
+            let mut reply_bytes = serde_json::to_vec(&varlink_reply).unwrap_or_default();
+            reply_bytes.push(0);
+            let _ = write_half.write_all(&reply_bytes).await;
+            let _ = write_half.flush().await;
+            continue;
+        }
+
+        let request: IpcRequest = match serde_json::from_str(raw) {
             Ok(req) => req,
             Err(e) => {
                 let _ = write_response(&mut write_half, &IpcResponse::Error {
