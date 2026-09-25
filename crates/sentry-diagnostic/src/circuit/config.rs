@@ -26,8 +26,8 @@ impl Default for AdaptiveTimeoutConfig {
     fn default() -> Self {
         Self {
             min_timeout: Duration::from_millis(1500),
-            max_timeout: Duration::from_secs(15),
-            initial_timeout: Duration::from_secs(5),
+            max_timeout: Duration::from_secs(60),
+            initial_timeout: Duration::from_secs(45),
             failure_threshold: 3,
             base_cooldown: Duration::from_secs(30),
             max_cooldown: Duration::from_secs(300),

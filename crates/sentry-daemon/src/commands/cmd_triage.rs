@@ -74,7 +74,7 @@ pub async fn execute_triage(unit: &str, json: bool, config: &DaemonConfig) -> i3
     let provider: std::sync::Arc<dyn sentry_diagnostic::LlmProvider> = std::sync::Arc::from(
         sentry_diagnostic::provider::create_provider(&config.provider),
     );
-    let engine = DiagnosticEngine::new(Some(provider));
+    let engine = DiagnosticEngine::with_config(Some(provider), config.provider.adaptive.clone());
     let diagnostic = engine.diagnose(&incident).await;
 
     if json {

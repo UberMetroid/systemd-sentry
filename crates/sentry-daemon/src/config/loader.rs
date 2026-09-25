@@ -12,8 +12,24 @@ pub const MAX_CONFIG_FILE_SIZE: u64 = 64 * 1024;
 ///
 /// If no file exists at the given path, returns `DaemonConfig::default()`.
 pub fn load_daemon_config(path: Option<&str>) -> Result<DaemonConfig, ConfigError> {
-    let target_path = path.unwrap_or("/etc/systemd-sentry/config.toml");
-    let file_path = Path::new(target_path);
+    let resolved_path = if let Some(p) = path {
+        std::path::PathBuf::from(p)
+    } else {
+        let system_path = Path::new("/etc/systemd-sentry/config.toml");
+        if system_path.exists() {
+            system_path.to_path_buf()
+        } else if let Ok(home) = std::env::var("HOME") {
+            let user_path = Path::new(&home).join(".config/systemd-sentry/config.toml");
+            if user_path.exists() {
+                user_path
+            } else {
+                system_path.to_path_buf()
+            }
+        } else {
+            system_path.to_path_buf()
+        }
+    };
+    let file_path = &resolved_path;
 
     let mut config: DaemonConfig = if !file_path.exists() {
         DaemonConfig::default()
@@ -25,13 +41,13 @@ pub fn load_daemon_config(path: Option<&str>) -> Result<DaemonConfig, ConfigErro
                 key: "file_size".to_string(),
                 reason: format!(
                     "Config file {} exceeds maximum size limit of {} bytes",
-                    target_path, MAX_CONFIG_FILE_SIZE
+                    file_path.display(), MAX_CONFIG_FILE_SIZE
                 ),
             });
         }
 
         let contents = fs::read_to_string(file_path).map_err(ConfigError::Io)?;
-        toml::from_str(&contents).map_err(|e| ConfigError::ParseError(format!("{}: {}", target_path, e)))?
+        toml::from_str(&contents).map_err(|e| ConfigError::ParseError(format!("{}: {}", file_path.display(), e)))?
     };
 
     // Integrate with systemd-creds: discover decrypted credentials from $CREDENTIALS_DIRECTORY

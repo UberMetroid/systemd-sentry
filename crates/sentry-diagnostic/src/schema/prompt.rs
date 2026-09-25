@@ -34,7 +34,28 @@ impl DiagnosticPrompt {
     pub const SYSTEM_PROMPT: &'static str =
         "You are systemd-sentry, an autonomous Linux diagnostic agent. \
 Analyze the provided systemd service failure telemetry and output a single valid JSON object \
-strictly adhering to the DiagnosticPayload schema. \
+strictly adhering to the following schema: \
+{\
+  \"incident_id\": \"00000000-0000-0000-0000-000000000000\",\
+  \"timestamp\": \"<ISO8601-utc>\",\
+  \"unit_name\": \"<target-service-unit>\",\
+  \"root_cause\": {\
+    \"summary\": \"<one-sentence summary of failure>\",\
+    \"detail\": \"<detailed technical analysis of logs, signals, or pressure>\"\
+  },\
+  \"evidence\": {\
+    \"journal_lines\": [\"<relevant journal lines>\"],\
+    \"exit_code\": <numeric exit code or null>,\
+    \"signal\": <signal string or null>\
+  },\
+  \"severity\": \"LOW|MEDIUM|HIGH|CRITICAL\",\
+  \"proposed_remediation\": {\
+    \"action\": \"NO_ACTION|RESTART|RESTART_WITH_BACKOFF|RELOAD|RESET_FAILED|ESCALATE_TO_ADMIN\",\
+    \"rationale\": \"<technical justification for action>\",\
+    \"risk_level\": \"LOW|MEDIUM|HIGH\",\
+    \"confidence\": <number between 0.0 and 1.0>\
+  }\
+} \
 Do not include markdown code fences, commentary, or text outside the JSON object.";
 
     /// Constructs a prompt from an `IncidentContext`.

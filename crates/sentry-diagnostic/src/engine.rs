@@ -20,7 +20,11 @@ pub struct DiagnosticEngine {
 impl DiagnosticEngine {
     /// Creates a new diagnostic engine with default adaptive circuit breaking.
     pub fn new(provider: Option<Arc<dyn LlmProvider>>) -> Self {
-        let config = AdaptiveTimeoutConfig::default();
+        Self::with_config(provider, AdaptiveTimeoutConfig::default())
+    }
+
+    /// Creates a new diagnostic engine with explicit adaptive timeout configuration.
+    pub fn with_config(provider: Option<Arc<dyn LlmProvider>>, config: AdaptiveTimeoutConfig) -> Self {
         Self {
             provider,
             sanitizer: SanitizationPipeline::new(),
@@ -125,7 +129,6 @@ impl DiagnosticEngine {
                             }
                         }
                         Err(_elapsed) => {
-                            // Dropping future cleanly cancels in-flight TCP socket request
                             tracing::warn!(
                                 "LLM provider {} completion timed out after {:?} for unit {}. Cleanly aborting inference.",
                                 provider.id(),

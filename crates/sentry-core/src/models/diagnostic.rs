@@ -19,6 +19,7 @@ pub struct RootCause {
 
 /// Evidentiary data backing the diagnosis.
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Evidence {
     /// Crucial journal lines leading up to failure.
     pub journal_lines: Vec<String>,
@@ -59,18 +60,39 @@ pub struct ProposedRemediation {
     pub confidence: f32,
 }
 
+fn deserialize_permissive_uuid<'de, D>(deserializer: D) -> Result<Uuid, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(Uuid::parse_str(&s).unwrap_or_else(|_| Uuid::nil()))
+}
+
+fn deserialize_permissive_time<'de, D>(deserializer: D) -> Result<DateTime<Utc>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s = String::deserialize(deserializer)?;
+    Ok(DateTime::parse_from_rfc3339(&s)
+        .map(|dt| dt.with_timezone(&Utc))
+        .unwrap_or_else(|_| Utc::now()))
+}
+
 /// Complete incident diagnostic payload.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DiagnosticPayload {
     /// Unique incident UUID v4.
+    #[serde(deserialize_with = "deserialize_permissive_uuid")]
     pub incident_id: Uuid,
     /// Timestamp of diagnostic generation.
+    #[serde(deserialize_with = "deserialize_permissive_time")]
     pub timestamp: DateTime<Utc>,
     /// Target service unit name.
     pub unit_name: String,
     /// Root cause determination.
     pub root_cause: RootCause,
     /// Collected evidence.
+    #[serde(default)]
     pub evidence: Evidence,
     /// Assessed severity level.
     pub severity: Severity,

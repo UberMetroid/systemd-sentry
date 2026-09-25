@@ -86,20 +86,23 @@ impl OpenAiClient {
         let url = self.endpoint_url();
         let headers = self.build_headers()?;
 
-        let body = json!({
-            "model": self.model,
-            "messages": [
-                { "role": "system", "content": DiagnosticPrompt::SYSTEM_PROMPT },
-                { "role": "user", "content": prompt.to_prompt_json() }
-            ],
-            "response_format": openai_response_format(),
-            "temperature": self.temperature,
-            "max_completion_tokens": 2048
-        });
-
+        let mut with_response_format = !self.base_url.contains("minimax");
         let mut attempts = 0;
         loop {
             attempts += 1;
+            let mut body = json!({
+                "model": self.model,
+                "messages": [
+                    { "role": "system", "content": DiagnosticPrompt::SYSTEM_PROMPT },
+                    { "role": "user", "content": prompt.to_prompt_json() }
+                ],
+                "temperature": self.temperature,
+                "max_completion_tokens": 2048
+            });
+            if with_response_format {
+                body["response_format"] = openai_response_format();
+            }
+
             let req = self.client.post(&url).headers(headers.clone()).json(&body);
 
             let resp = match req.send().await {
@@ -116,6 +119,11 @@ impl OpenAiClient {
             };
 
             let status = resp.status();
+            if status == reqwest::StatusCode::BAD_REQUEST && with_response_format {
+                with_response_format = false;
+                continue;
+            }
+
             if status == reqwest::StatusCode::UNAUTHORIZED {
                 return Err(DiagnosticError::ProviderUnavailable(
                     "OpenAI API authentication failed (HTTP 401 Unauthorized)".to_string(),
