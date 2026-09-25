@@ -88,9 +88,9 @@ watchdog_sec = 15
 max_rss_bytes = 13631488    # 13 MiB limit before load shedding
 
 [provider]
-provider_type = "ollama"    # "ollama", "llamacpp", "openai", "fallback"
-endpoint = "http://127.0.0.1:11434"
-model = "llama3:8b"
+provider_type = "openai"    # "ollama", "llamacpp", "openai", "fallback"
+endpoint = "http://127.0.0.1:32768/v1"
+model = "fast"
 timeout_secs = 10
 # api_key = "..."           # When using systemd-creds, loaded automatically
 ```

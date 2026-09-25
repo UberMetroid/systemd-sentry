@@ -50,3 +50,15 @@ fn test_create_openai_provider() {
     let provider = create_provider(&config);
     assert_eq!(provider.id(), "openai");
 }
+
+#[test]
+fn test_default_provider_config() {
+    let config = ProviderConfig::default();
+    assert_eq!(config.kind, ProviderKind::OpenAi);
+    assert_eq!(config.base_url, "http://127.0.0.1:32768/v1");
+    assert_eq!(config.model, "fast");
+
+    let provider = create_provider(&config);
+    assert_eq!(provider.id(), "openai");
+}
+

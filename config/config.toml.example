@@ -14,13 +14,13 @@ max_rss_bytes = 13631488
 
 [provider]
 # Diagnostic provider type: "ollama", "llamacpp", "openai", or "fallback"
-provider_type = "ollama"
+provider_type = "openai"
 
 # Inference endpoint URL
-endpoint = "http://127.0.0.1:11434"
+endpoint = "http://127.0.0.1:32768/v1"
 
 # Model identifier
-model = "llama3:8b"
+model = "fast"
 
 # Optional API key. When running as a systemd service, prefer using systemd-creds:
 #   systemd-creds set /etc/credstore.encrypted/openai_api_key

@@ -24,7 +24,7 @@ pub enum ProviderKind {
 pub struct ProviderConfig {
     /// Provider kind.
     pub kind: ProviderKind,
-    /// Base URL (e.g. "http://127.0.0.1:11434" or "https://api.openai.com/v1").
+    /// Base URL (e.g. "http://127.0.0.1:32768/v1" or "https://api.openai.com/v1").
     pub base_url: String,
     /// Model name.
     pub model: String,
@@ -42,9 +42,9 @@ pub struct ProviderConfig {
 impl Default for ProviderConfig {
     fn default() -> Self {
         Self {
-            kind: ProviderKind::Ollama,
-            base_url: "http://127.0.0.1:11434".to_string(),
-            model: "llama3.2:latest".to_string(),
+            kind: ProviderKind::OpenAi,
+            base_url: "http://127.0.0.1:32768/v1".to_string(),
+            model: "fast".to_string(),
             api_key: None,
             timeout: Duration::from_secs(45),
             temperature: 0.1,
